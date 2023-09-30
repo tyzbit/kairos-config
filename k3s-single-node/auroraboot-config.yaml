@@ -1,0 +1,79 @@
+state_dir: "/storage"
+artifact_version: v2.4.0-k3sv1.27.3+k3s1
+release_version: v2.4.0
+flavor: debian
+repository: kairos-io/kairos
+
+cloud_config: |
+  #cloud-config
+  hostname: hyades
+
+  # Define the user accounts on the node.
+  users:
+    - name: "kairos"
+      ssh_authorized_keys:
+        - github:tyzbit
+
+  install:
+    auto: true
+    device: /dev/sda
+    reboot: true
+
+  growpart:
+    devices: ['/']
+
+  kubevip:
+    enable: false
+
+  k3s:
+    enabled: true
+    args:
+      - --disable=traefik,servicelb
+      - --flannel-backend=none
+      # recommended in addition to disabling flannel
+      - --disable-network-policy
+
+  write_files:
+  - path: /etc/environment
+    content: |
+      KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+    append: true
+
+  stages:
+    initramfs:
+      # Mounts the disk under the /data dir during initramfs on each boot, with RW. Extra options can be added to the mount here
+      - name: "Mount /dev/nvme0p1 under /mnt/longhorn"
+        commands:
+          - mount -o rw /dev/nvme0n1 /mnt/longhorn
+
+    boot:
+      - name: "Install Calico" 
+        downloads:
+          - url: https://raw.githubusercontent.com/projectcalico/calico/v3.26.1/manifests/tigera-operator.yaml
+            path: /var/lib/rancher/k3s/server/manifests/calico-operator.yaml
+          - url: https://raw.githubusercontent.com/tyzbit/kairos-config/main/k3s-single-node/manifests/calico-crds.yaml
+            path: /var/lib/rancher/k3s/server/manifests/calico-crds.yaml
+
+    after-install-chroot: 
+      # I have a tiny monitor
+      - name: "Increase display console text size"
+        commands:
+          - sed -i 's/8x16/16x32/g' /etc/default/console-setup
+      # Creates the data dir after install inside the final system chroot
+      - &createdatadir
+        name: "Create data dir"
+        commands:
+          - mkdir -p /mnt/longhorn
+      # # Formats the disk ONLY after-install and just once. Extra checks can be added here, so we don't reformat it
+      # # This can also go in the after-install stage, but its just important to do it just once
+      # - name: "Format /dev/nvme0"
+      #   commands:
+      #     - mkfs.ext4 -F /dev/nvme0p1
+
+    # Creates the data dir after reset inside the final system chroot, just in case it's not there
+    after-reset-chroot:
+      - <<: *createdatadir
+
+    # Creates the data dir after upgrade inside the final system chroot, just in case it's not there
+    after-upgrade-chroot:
+      - <<: *createdatadir
