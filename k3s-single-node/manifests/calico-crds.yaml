@@ -9,7 +9,7 @@ spec:
     bgp: Enabled
     hostPorts: Enabled
     ipPools:
-      - blockSize: 0
+      - blockSize: 24
         cidr: 172.23.0.0/18
         encapsulation: VXLANCrossSubnet
         natOutgoing: Enabled
@@ -36,7 +36,7 @@ metadata:
   name: default
 spec: {}
 ---
-apiVersion: crd.projectcalico.org/v1
+apiVersion: projectcalico.org/v3
 kind: BGPConfiguration
 metadata:
   name: default
