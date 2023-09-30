@@ -1,0 +1,25 @@
+apiVersion: kubeadm.k8s.io/v1beta3
+kind: ClusterConfiguration
+apiServer:
+  certSANs:
+    - 172.23.64.1
+    - 192.168.1.2
+    - hyades.onair
+  extraArgs:
+    authorization-mode: Node,RBAC
+  timeoutForControlPlane: 4m0s
+certificatesDir: /etc/kubernetes/pki
+clusterName: kubernetes
+controlPlaneEndpoint: hyades.onair:6443
+controllerManager: {}
+dns: {}
+etcd:
+  local:
+    dataDir: /var/lib/etcd
+imageRepository: k8s.gcr.io
+kubernetesVersion: v1.23.14
+networking:
+  dnsDomain: cluster.local
+  podSubnet: 172.23.64.0/18
+  serviceSubnet: 172.23.64.0/18
+scheduler: {}
