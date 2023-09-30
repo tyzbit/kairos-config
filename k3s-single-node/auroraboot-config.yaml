@@ -10,7 +10,8 @@ cloud_config: |
 
   # Define the user accounts on the node.
   users:
-    - name: "kairos"
+    - name: "kairos" # kairos gets sudo automatically so I don't change it
+      # passwd: "password" # I don't set a password because I don't need one
       ssh_authorized_keys:
         - github:tyzbit
 
