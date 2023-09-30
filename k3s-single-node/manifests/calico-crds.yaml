@@ -9,7 +9,7 @@ spec:
     bgp: Enabled
     hostPorts: Enabled
     ipPools:
-      - blockSize: 26
+      - blockSize: 0
         cidr: 172.23.0.0/18
         encapsulation: VXLANCrossSubnet
         natOutgoing: Enabled
@@ -28,7 +28,15 @@ spec:
     type: RollingUpdate
   variant: Calico
 ---
-apiVersion: projectcalico.org/v3
+# This section configures the Calico API server.
+# For more information, see: https://projectcalico.docs.tigera.io/master/reference/installation/api#operator.tigera.io/v1.APIServer
+apiVersion: operator.tigera.io/v1
+kind: APIServer
+metadata:
+  name: default
+spec: {}
+---
+apiVersion: crd.projectcalico.org/v1
 kind: BGPConfiguration
 metadata:
   name: default
@@ -41,14 +49,6 @@ spec:
     - cidr: 172.23.128.0/18
   serviceLoadBalancerIPs:
     - cidr: 172.23.192.0/18
----
-# This section configures the Calico API server.
-# For more information, see: https://projectcalico.docs.tigera.io/master/reference/installation/api#operator.tigera.io/v1.APIServer
-apiVersion: operator.tigera.io/v1
-kind: APIServer
-metadata:
-  name: default
-spec: {}
 ---
 ## BGP configuration specific to my network
 apiVersion: crd.projectcalico.org/v1
