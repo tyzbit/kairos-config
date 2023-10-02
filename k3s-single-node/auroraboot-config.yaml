@@ -37,6 +37,7 @@ cloud_config: |
       - --flannel-backend=none
       # recommended in addition to disabling flannel
       - --disable-network-policy
+      - --service_cidr 172.23.0.0/18
       # so my user can use kubectl immediately
       - --write-kubeconfig-mode 0644
 
@@ -51,6 +52,8 @@ cloud_config: |
       - name: "Set up local kubeconfig"
         environment:
           KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+          CONTAINERD_ADDRESS: /run/k3s/containerd/containerd.sock
+          CONTAINERD_NAMESPACE: k8s.io
       - name: "Install Calico" 
         downloads:
           - url: https://raw.githubusercontent.com/projectcalico/calico/v3.26.1/manifests/tigera-operator.yaml
@@ -99,7 +102,6 @@ cloud_config: |
     #   - name: "Bootstrap Flux"
     #     commands:
     #     # this has been provided via commandline to aurora: `--set custom.github_token="abcdef"`
-    #     # this functionality doesn't exist but I might make a PR for it
     #       - >-
     #         bash -c export GITHUB_TOKEN='{{ .custom.github_token }}' &&
     #         flux bootstrap github
