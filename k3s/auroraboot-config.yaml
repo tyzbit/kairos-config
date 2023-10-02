@@ -94,7 +94,7 @@ cloud_config: |
     network_token: 55c58ba2-811b-4bea-943a-460f3618a0f4
     # Enable for LAN-only clusters
     disable_dht: true
-    # 
+    # EdgeVPN DNS server
     dns: false
     vpn:
       create: false
