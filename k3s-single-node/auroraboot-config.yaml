@@ -37,7 +37,7 @@ cloud_config: |
       - --flannel-backend=none
       # recommended in addition to disabling flannel
       - --disable-network-policy
-      - --service-cidr 172.23.0.0/18
+      - --service-cidr 172.23.64.0/18
       # so my user can use kubectl immediately
       - --write-kubeconfig-mode 0644
 
