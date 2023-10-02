@@ -9,8 +9,10 @@ cloud_config: |
 
   # Define the user accounts on the node.
   users:
-    - name: "kairos" # kairos gets sudo automatically so I don't change it
-      # passwd: "password" # I don't set a password because I don't need one
+    - name: "tyzbit" # the kairos user is not created
+      shell: /bin/bash
+      groups:
+        - admin
       ssh_authorized_keys:
         - github:tyzbit
 
@@ -30,23 +32,22 @@ cloud_config: |
     args:
       - --disable=traefik,servicelb
       - --flannel-backend=none
-      # recommended in addition to disabling flannel
       - --disable-network-policy
-
-  write_files:
-  - path: /etc/environment
-    content: |
-      KUBECONFIG=/etc/rancher/k3s/k3s.yaml
-    append: true
+      - --service-cidr 172.23.64.0/18
+      - --write-kubeconfig-mode 0644
     
   stages:
     initramfs:
-      # Mounts the disk under the /data dir during initramfs on each boot, with RW. Extra options can be added to the mount here
-      - name: "Mount /dev/nvme0p1 under /mnt/longhorn"
+      - name: "Mount /dev/nvme0n1 under /mnt/longhorn"
         commands:
           - mount -o rw /dev/nvme0n1 /mnt/longhorn
 
     boot:
+      - name: "Set up local kubeconfig"
+        environment:
+          KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+          CONTAINERD_ADDRESS: /run/k3s/containerd/containerd.sock
+          CONTAINERD_NAMESPACE: k8s.io
       - name: "Setup hostname"
         hostname: >-
           {{if eq .Values.p2p.role master }}
@@ -62,38 +63,44 @@ cloud_config: |
           - url: https://raw.githubusercontent.com/tyzbit/kairos-config/main/k3s/manifests/calico-crds.yaml
             path: /var/lib/rancher/k3s/server/manifests/calico-crds.yaml
 
-    after-install-chroot:
-      # I have a tiny monitor
-      - name: "Increase display console text size"
+    after-install-chroot: 
+      - &consolesize
+        name: "Increase display console text size"
         commands:
           - sed -i 's/8x16/16x32/g' /etc/default/console-setup
-      # Creates the data dir after install inside the final system chroot
+      - &createdatadir
+        name: "Create Longhorn data dir"
+        commands:
+          - mkdir -p /mnt/longhorn
+      - name: "Format /dev/nvme0n1p1 if needed"
+        if: "[[ $(lsblk -o FSTYPE /dev/nvme0n1p1 | tail -n 1 | wc -l) -eq 0]]"
+        commands:
+          - mkfs.ext4 -F /dev/nvme0n1p1
       - &createdatadir
         name: "Create data dir"
         commands:
           - mkdir -p /mnt/longhorn
-      # # Formats the disk ONLY after-install and just once. Extra checks can be added here, so we don't reformat it
-      # # This can also go in the after-install stage, but its just important to do it just once
-      # - name: "Format /dev/nvme0"
-      #   commands:
-      #     - mkfs.ext4 -F /dev/nvme0p1
 
-    # Creates the data dir after reset inside the final system chroot, just in case it's not there
     after-reset-chroot:
+      - <<: *consolesize
       - <<: *createdatadir
 
-    # Creates the data dir after upgrade inside the final system chroot, just in case it's not there
     after-upgrade-chroot:
+      - <<: *consolesize
       - <<: *createdatadir
 
   p2p:
     network_id: corpus
     network_token: 55c58ba2-811b-4bea-943a-460f3618a0f4
-    disable_dht: true # Enable for LAN-only clusters
+    # Enable for LAN-only clusters
+    disable_dht: true
+    # 
+    dns: false
     vpn:
       create: false
       use: false
     auto:
       enable: true
-      ha: true
-      master_nodes: 1
+      ha: 
+        enable: true
+        master_nodes: 1
