@@ -88,7 +88,7 @@ cloud_config: |
       # Formats the disk ONLY after-install and just once. Extra checks can be added here, so we don't reformat it
       # This can also go in the after-install stage, but its just important to do it just once
       - name: "Format /dev/nvme0n1p1 if needed"
-        if: "[[ $(lsblk -o FSTYPE /dev/nvme0n1p1 | tail -n 1 | wc -l) -eq 0]]"
+        if: "[[ $(lsblk -o FSTYPE /dev/nvme0n1p1 | tail -n 1 | wc -l) -eq 0 ]]"
         commands:
           - mkfs.ext4 -F /dev/nvme0n1p1
       # Creates the data dir after install inside the final system chroot
