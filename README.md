@@ -27,6 +27,11 @@ stages:
 Of course, this requires the file to already be committed to the repository.
 The official docs mention using gists as well, same principle.
 
+Also, I run a little webserver on my NAS for sensitive things so that I can
+continue to commit the rest of my code here. It's a pattern I recommend, except
+it's not great security-wise. Kairos being experimental as it is, it's fine
+for me for now.
+
 ---
 
 #### Tested and working
