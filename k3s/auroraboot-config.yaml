@@ -7,9 +7,9 @@ repository: kairos-io/kairos
 cloud_config: |
   #cloud-config
 
-  # Define the user accounts on the node.
+  hostname: spartacus-{{ trunc 4 .MachineID }}
   users:
-    - name: "tyzbit" # the kairos user is not created
+    - name: "tyzbit"
       shell: /bin/bash
       groups:
         - admin
@@ -38,72 +38,117 @@ cloud_config: |
     
   stages:
     initramfs:
-      - name: "Mount /dev/nvme0n1 under /mnt/longhorn"
+      - name: "Mount /dev/nvme0n1 under /var/lib/longhorn"
         commands:
-          - mount -o rw /dev/nvme0n1 /mnt/longhorn
+          - mount -o rw /dev/nvme0n1 /var/lib/longhorn
 
     boot:
-      - name: "Set up local kubeconfig"
+      - name: "Setup dns"
+        dns:
+          nameservers:
+          - 192.168.1.1
+
+      - name: "Set up various kube environment variables"
         environment:
           KUBECONFIG: /etc/rancher/k3s/k3s.yaml
           CONTAINERD_ADDRESS: /run/k3s/containerd/containerd.sock
           CONTAINERD_NAMESPACE: k8s.io
-      - name: "Setup hostname"
-        hostname: >-
-          {{if eq .Values.p2p.role master }}
-            neuron
-          {{ else }}
-            myocite
-          {{ end }}
-          -{{ trunc 4 .MachineID }}
+
+      # # -- It's important the file gets loaded after the main file so .Values.p2p.role is set
+      # # -- The files are loaded alphabetically
+      # - name: "Setup hostname"
+      #   files:
+      #     - path: /oem/95_k3s_post_config.yaml
+      #       content: |
+      #         #cloud-config
+
+      #         hostname: "{{ if eq .p2p.role master }}neuron{{ else }}myocite{{ end }}-{{ trunc 4 .MachineID }}"
+      #       permissions: 0644
+      #       owner: 0
+      #       group: 0
+
+      - name: "Add flux-system namespace manifest"
+        files:
+          - path: /var/lib/rancher/k3s/server/manifests/flux-system.yaml
+            content: |
+              apiVersion: v1
+              kind: Namespace
+              metadata:
+                name: flux-system
+            permissions: 0644
+            owner: 0
+            group: 0
+
       - name: "Install Calico" 
         downloads:
           - url: https://raw.githubusercontent.com/projectcalico/calico/v3.26.1/manifests/tigera-operator.yaml
             path: /var/lib/rancher/k3s/server/manifests/calico-operator.yaml
           - url: https://raw.githubusercontent.com/tyzbit/kairos-config/main/k3s/manifests/calico-crds.yaml
             path: /var/lib/rancher/k3s/server/manifests/calico-crds.yaml
+      - name: "Add CalicoNodeStatus resource"
+        files:
+          - path: /var/lib/rancher/k3s/server/manifests/calico-node-status.yaml
+            content: |
+              apiVersion: crd.projectcalico.org/v1
+              kind: CalicoNodeStatus
+              metadata:
+                name: spartacus-{{ trunc 4 .MachineID }}
+              spec:
+                classes:
+                  - Agent
+                  - BGP
+                  - Routes
+                node: spartacus-{{ trunc 4 .MachineID }}
+                updatePeriodSeconds: 10
+            permissions: 0644
+            owner: 0
+            group: 0
 
-    after-install-chroot: 
-      - &consolesize
-        name: "Increase display console text size"
+      - name: "Download SOPS secret" 
+        downloads:
+          - url: http://nas.onair/sops-secret.yaml
+            path: /var/lib/rancher/k3s/server/manifests/sops-secret.yaml
+
+    after-install-chroot:
+      # -- The pre config has the p2p.network_token
+      # -- (only `commands`,`entities` and `files` may have templating)
+      # -- (the generated config is /oem/90_custom.yaml)
+      - name: "Download additional pre-config"
+        downloads:
+          - url: http://nas.onair/50_k3s_pre_config.yaml
+            path: /oem/50_k3s_pre_config.yaml
+            permissions: 0600
+            owner: 0
+            group: 0
+
+      - name: "Increase display console text size"
         commands:
           - sed -i 's/8x16/16x32/g' /etc/default/console-setup
+
       - &createdatadir
         name: "Create Longhorn data dir"
         commands:
-          - mkdir -p /mnt/longhorn
+          - mkdir -p /var/lib/longhorn
+
       - name: "Format /dev/nvme0n1p1 if needed"
-        if: "[[ $(lsblk -o FSTYPE /dev/nvme0n1p1 | tail -n 1 | wc -l) -eq 0]]"
+        if: "[[ $(lsblk -o FSTYPE /dev/nvme0n1p1 | tail -n 1 | wc -l) -eq 0 ]]"
         commands:
           - mkfs.ext4 -F /dev/nvme0n1p1
-      - &createdatadir
-        name: "Create data dir"
-        commands:
-          - mkdir -p /mnt/longhorn
 
     after-reset-chroot:
-      - <<: *consolesize
       - <<: *createdatadir
 
     after-upgrade-chroot:
-      - <<: *consolesize
       - <<: *createdatadir
 
   p2p:
-    network_id: corpus
-    # # run this command to generate the network_token
-    # # docker run -ti --rm quay.io/mudler/edgevpn -b -g
-    # network_token: (base 64 data)
-    
-    # Enable for LAN-only clusters
-    disable_dht: true
-    # EdgeVPN DNS server
-    dns: false
-    vpn:
-      create: false
-      use: false
+    network_id: spartacus
     auto:
       enable: true
       ha: 
         enable: true
         master_nodes: 1
+    # -- network_token is in another ~~castle~~ config file!
+    # vpn:
+    #   create: false
+    #   use: false
