@@ -1,15 +1,28 @@
 state_dir: "/storage"
-artifact_version: v2.4.0-k3sv1.27.3+k3s1
-release_version: v2.4.0
+artifact_version: v2.4.1-k3sv1.27.3+k3s1
+release_version: v2.4.1
 flavor: debian
 repository: kairos-io/kairos
+# netboot:
+#   cmdline: >-
+#     rd.live.overlay.overlayfs
+#     rd.neednet=1
+#     ip=dhcp
+#     rd.cos.disable
+#     netboot
+#     nodepair.enable
+#     console=tty1
+#     console=ttyS0
+#     console=tty0
+#     custom_config={{ ID "/storage/config_extra.yaml" }}
+#     sops_secret={{ ID "/storage/sops_secret.yaml" }}
 
 cloud_config: |
   #cloud-config
 
   hostname: spartacus-{{ trunc 4 .MachineID }}
   users:
-    - name: "tyzbit"
+    - name: tyzbit
       shell: /bin/bash
       groups:
         - admin
@@ -20,12 +33,22 @@ cloud_config: |
     auto: true
     device: /dev/sda
     reboot: true
+    extra-dirs-rootfs: &longhorn
+      - /mnt/longhorn
+
+  upgrade:
+    extra-dirs-rootfs: *longhorn
+
+  reset:
+    extra-dirs-rootfs: *longhorn
 
   growpart:
     devices: ['/']
 
   kubevip:
-    enable: false
+    enabled: true
+    eip: "192.168.1.8"
+    manifest_url: ""
 
   k3s:
     enabled: true
@@ -35,18 +58,30 @@ cloud_config: |
       - --disable-network-policy
       - --service-cidr 172.23.64.0/18
       - --write-kubeconfig-mode 0644
-    
+
   stages:
     initramfs:
-      - name: "Mount /dev/nvme0n1 under /var/lib/longhorn"
+      - name: "Partition /dev/nvme0n1 if needed"
+        if: >-
+          [ $(sudo fdisk -l /dev/nvme0n1 | grep -q "83 Linux"; echo $?) -ne 0 ]
         commands:
-          - mount -o rw /dev/nvme0n1 /var/lib/longhorn
+          - parted /dev/nvme0n1 --script -- mkpart primary 0 -1
+
+      - name: "Format /dev/nvme0n1p1 if needed"
+        if: >-
+          [ $(sudo lsblk -o FSTYPE /dev/nvme0n1p1 | tail -n 1 | wc -l) -eq 0 ]
+        commands:
+          - mkfs.ext4 -F /dev/nvme0n1p1
 
     boot:
-      - name: "Setup dns"
+      - name: "Setup DNS"
         dns:
           nameservers:
           - 192.168.1.1
+
+      - name: "Mount /dev/nvme0n1p1 under /mnt/longhorn"
+        commands:
+          - mount -o rw /dev/nvme0n1p1 /mnt/longhorn
 
       - name: "Set up various kube environment variables"
         environment:
@@ -54,19 +89,7 @@ cloud_config: |
           CONTAINERD_ADDRESS: /run/k3s/containerd/containerd.sock
           CONTAINERD_NAMESPACE: k8s.io
 
-      # # -- It's important the file gets loaded after the main file so .Values.p2p.role is set
-      # # -- The files are loaded alphabetically
-      # - name: "Setup hostname"
-      #   files:
-      #     - path: /oem/95_k3s_post_config.yaml
-      #       content: |
-      #         #cloud-config
-
-      #         hostname: "{{ if eq .p2p.role master }}neuron{{ else }}myocite{{ end }}-{{ trunc 4 .MachineID }}"
-      #       permissions: 0644
-      #       owner: 0
-      #       group: 0
-
+      # -- This is needed now so we can add the SOPS secret
       - name: "Add flux-system namespace manifest"
         files:
           - path: /var/lib/rancher/k3s/server/manifests/flux-system.yaml
@@ -100,46 +123,23 @@ cloud_config: |
                   - Routes
                 node: spartacus-{{ trunc 4 .MachineID }}
                 updatePeriodSeconds: 10
-            permissions: 0644
-            owner: 0
-            group: 0
 
       - name: "Download SOPS secret" 
         downloads:
-          - url: http://nas.onair/sops-secret.yaml
+          - url: http://nas.onair/sops_secret.yaml
             path: /var/lib/rancher/k3s/server/manifests/sops-secret.yaml
 
     after-install-chroot:
       # -- The pre config has the p2p.network_token
       # -- (only `commands`,`entities` and `files` may have templating)
-      # -- (the generated config is /oem/90_custom.yaml)
       - name: "Download additional pre-config"
         downloads:
-          - url: http://nas.onair/50_k3s_pre_config.yaml
-            path: /oem/50_k3s_pre_config.yaml
-            permissions: 0600
-            owner: 0
-            group: 0
+          - url: http://nas.onair/config_extra.yaml
+            path: /oem/50_config_extra.yaml
 
       - name: "Increase display console text size"
         commands:
           - sed -i 's/8x16/16x32/g' /etc/default/console-setup
-
-      - &createdatadir
-        name: "Create Longhorn data dir"
-        commands:
-          - mkdir -p /var/lib/longhorn
-
-      - name: "Format /dev/nvme0n1p1 if needed"
-        if: "[[ $(lsblk -o FSTYPE /dev/nvme0n1p1 | tail -n 1 | wc -l) -eq 0 ]]"
-        commands:
-          - mkfs.ext4 -F /dev/nvme0n1p1
-
-    after-reset-chroot:
-      - <<: *createdatadir
-
-    after-upgrade-chroot:
-      - <<: *createdatadir
 
   p2p:
     network_id: spartacus
@@ -147,7 +147,8 @@ cloud_config: |
       enable: true
       ha: 
         enable: true
-        master_nodes: 1
+        # -- ADDITIONAL control plane nodes
+        # master_nodes: 1
     # -- network_token is in another ~~castle~~ config file!
     # vpn:
     #   create: false
