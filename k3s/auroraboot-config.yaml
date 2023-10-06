@@ -35,6 +35,9 @@ cloud_config: |
     reboot: true
     extra-dirs-rootfs: &longhorn
       - /mnt/longhorn
+    bundles:
+      - targets:
+        - run://docker.io/tyzbit/flux:latest
 
   upgrade:
     extra-dirs-rootfs: *longhorn
@@ -47,8 +50,7 @@ cloud_config: |
 
   kubevip:
     enabled: true
-    eip: "192.168.1.8"
-    manifest_url: ""
+    eip: 192.168.1.8
 
   k3s:
     enabled: true
@@ -74,11 +76,6 @@ cloud_config: |
           - mkfs.ext4 -F /dev/nvme0n1p1
 
     boot:
-      - name: "Setup DNS"
-        dns:
-          nameservers:
-          - 192.168.1.1
-
       - name: "Mount /dev/nvme0n1p1 under /mnt/longhorn"
         commands:
           - mount -o rw /dev/nvme0n1p1 /mnt/longhorn
@@ -98,9 +95,6 @@ cloud_config: |
               kind: Namespace
               metadata:
                 name: flux-system
-            permissions: 0644
-            owner: 0
-            group: 0
 
       - name: "Install Calico" 
         downloads:
@@ -143,6 +137,8 @@ cloud_config: |
 
   p2p:
     network_id: spartacus
+    dns: false
+    # disable_dht: true
     auto:
       enable: true
       ha: 
@@ -150,6 +146,19 @@ cloud_config: |
         # -- ADDITIONAL control plane nodes
         # master_nodes: 1
     # -- network_token is in another ~~castle~~ config file!
-    # vpn:
-    #   create: false
-    #   use: false
+    vpn:
+      create: false
+      enable: false
+      env:
+        DNSFORWARD: "true"
+        DNSCACHESIZE: "200"
+        DNSFORWARDSERVER: "192.168.1.1:53"
+
+  # -- Bundle configs
+  # -- Flux
+  flux:
+    github:
+      owner: tyzbit
+      repository: fleet-infra
+      path: clusters/spartacus
+      components-extra: image-reflector-controller,image-automation-controller
