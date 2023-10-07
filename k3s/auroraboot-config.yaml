@@ -3,6 +3,9 @@ artifact_version: v2.4.1-k3sv1.27.3+k3s1
 release_version: v2.4.1
 flavor: debian
 repository: kairos-io/kairos
+
+# # -- This adds files to AuroraBoot to serve them but the arguments
+# # are also passed at boot-time, screwing up the boot
 # netboot:
 #   cmdline: >-
 #     rd.live.overlay.overlayfs
@@ -61,6 +64,7 @@ cloud_config: |
       - --disable-network-policy
       - --service-cidr 172.23.64.0/18
       - --write-kubeconfig-mode 0644
+      - --node-taint 'node-role.kubernetes.io/controle-plane=NoSchedule'
 
   stages:
     after-install-chroot:
