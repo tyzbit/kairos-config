@@ -36,8 +36,9 @@ cloud_config: |
     extra-dirs-rootfs: &longhorn
       - /mnt/longhorn
     bundles:
-      - targets:
-        - run://docker.io/tyzbit/flux:latest
+      - rootfs_path: /usr/local/lib/extensions/flux
+        targets:
+          - container://docker.io/tyzbit/flux:latest
 
   upgrade:
     extra-dirs-rootfs: *longhorn
@@ -62,6 +63,18 @@ cloud_config: |
       - --write-kubeconfig-mode 0644
 
   stages:
+    after-install-chroot:
+      # -- The pre config has the p2p.network_token
+      # -- (only `commands`,`entities` and `files` may have templating)
+      - name: "Download additional pre-config"
+        downloads:
+          - url: http://nas.onair/config_extra.yaml
+            path: /oem/50_config_extra.yaml
+
+      - name: "Increase display console text size"
+        commands:
+          - sed -i 's/8x16/16x32/g' /etc/default/console-setup
+
     initramfs:
       - name: "Partition /dev/nvme0n1 if needed"
         if: >-
@@ -123,17 +136,9 @@ cloud_config: |
           - url: http://nas.onair/sops_secret.yaml
             path: /var/lib/rancher/k3s/server/manifests/sops-secret.yaml
 
-    after-install-chroot:
-      # -- The pre config has the p2p.network_token
-      # -- (only `commands`,`entities` and `files` may have templating)
-      - name: "Download additional pre-config"
-        downloads:
-          - url: http://nas.onair/config_extra.yaml
-            path: /oem/50_config_extra.yaml
-
-      - name: "Increase display console text size"
+      - name: "Bootstrap with Flux" 
         commands:
-          - sed -i 's/8x16/16x32/g' /etc/default/console-setup
+          - bash /usr/local/lib/extensions/flux/bootstrap.sh &
 
   p2p:
     network_id: spartacus
@@ -141,7 +146,7 @@ cloud_config: |
     # disable_dht: true
     auto:
       enable: true
-      ha: 
+      ha:
         enable: true
         # -- ADDITIONAL control plane nodes
         # master_nodes: 1
