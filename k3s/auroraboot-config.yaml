@@ -158,10 +158,10 @@ cloud_config: |
     vpn:
       create: false
       enable: false
-      env:
-        DNSFORWARD: "true"
-        DNSCACHESIZE: "200"
-        DNSFORWARDSERVER: "192.168.1.1:53"
+      # env:
+      #   DNSFORWARD: "true"
+      #   DNSCACHESIZE: "200"
+      #   DNSFORWARDSERVER: "192.168.1.1:53"
 
   # -- Bundle configs
   # -- Flux
