@@ -64,7 +64,7 @@ cloud_config: |
       - --disable-network-policy
       - --service-cidr 172.23.64.0/18
       - --write-kubeconfig-mode 0644
-      - --node-taint 'node-role.kubernetes.io/controle-plane=NoSchedule'
+      - --node-taint 'node-role.kubernetes.io/control-plane=effect:NoSchedule'
 
   stages:
     after-install-chroot:
@@ -159,9 +159,9 @@ cloud_config: |
       create: false
       enable: false
       # env:
-      #   DNSFORWARD: "true"
-      #   DNSCACHESIZE: "200"
-      #   DNSFORWARDSERVER: "192.168.1.1:53"
+        # DNSFORWARD: "true"
+        # DNSCACHESIZE: "200"
+        # DNSFORWARDSERVER: "192.168.1.1:53"
 
   # -- Bundle configs
   # -- Flux
