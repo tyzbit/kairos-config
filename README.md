@@ -39,10 +39,10 @@ for me for now.
 (this might give you an idea of which configs are up-to-date)
 
 - **k3s-single-node**: A simple, single-node cluster for testing
+- **k3s**: A p2p k3s cluster
 
 ---
 
 #### Unfinished and untested
 
-- **k3s**: A p2p k3s cluster
 - **kubeadm**: A p2p k3s cluster
