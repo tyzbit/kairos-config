@@ -46,3 +46,15 @@ for me for now.
 #### Unfinished and untested
 
 - **kubeadm**: A p2p k3s cluster
+
+# Upgrades
+
+`sudo kairos-agent upgrade [version]`
+
+**Ensure upgrade applied successfully**
+
+`sudo kairos-agent upgrade [version] --recovery`
+
+**Ensure recovery upgraded successfully**
+
+Then upgrade your AuroraBoot config for any new nodes that are added later.

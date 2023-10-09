@@ -41,6 +41,9 @@ cloud_config: |
     bundles:
       - rootfs_path: /usr/local/lib/extensions/flux
         targets:
+          # # If this is merged, use the commented out line instead
+          # # https://github.com/kairos-io/community-bundles/pull/53
+          # - container://quay.io/kairos/community-bundles:flux_latest
           - container://docker.io/tyzbit/flux:latest
 
   upgrade:
