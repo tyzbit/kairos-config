@@ -37,6 +37,38 @@ kubevip:
 
 stages:
   after-install-chroot:
+    - name: "Increase display console text size"
+      commands:
+        - sed -i 's/8x16/16x32/g' /etc/default/console-setup
+
+    # TODO: https://kairos.io/docs/reference/build-from-scratch/
+    - name: "Configure to use m.2 Realtek card"
+      files:
+        - path: /etc/systemd/network/10-disable-onboard.network
+          permissions: 0644
+          content: |
+            [Match]
+            Name=enp0*
+            [Link]
+            Unmanaged=true
+        - path: /etc/modprobe.d/blacklist-r8169.conf
+          permissions: 0644
+          content: |
+            blacklist r8169
+        - path: /etc/apt/sources.list.d/debian-nonfree.list
+          permissions: 0644
+          content: |
+            deb http://ftp.us.debian.org/debian trixie main non-free-firmware
+
+    - name: "Install Realtek firmware"
+      commands:
+        - apt-get update
+        - apt-get install -y firmware-realtek
+        - apt-get clean && rm -rf /var/lib/apt/lists/*
+        # - rmmod r8169
+        # - modprobe r8125
+        # - update-initramfs -u
+
     # # -- The pre config has the p2p.network_token
     # # -- (only `commands`,`entities` and `files` may have templating)
     - name: "Download additional pre-config"
@@ -82,62 +114,6 @@ stages:
               enabled: true
             {{- end }}
 
-  initramfs:
-    - name: "Increase display console text size"
-      commands:
-        - sed -i 's/8x16/16x32/g' /etc/default/console-setup
-
-    # TODO: https://kairos.io/docs/reference/build-from-scratch/
-    - name: "Configure to use m.2 Realtek card"
-      files:
-        - path: /etc/systemd/network/10-disable-onboard.network
-          permissions: 0644
-          content: |
-            [Match]
-            Name=enp0*
-            [Link]
-            Unmanaged=true
-        - path: /etc/modprobe.d/blacklist-r8169.conf
-          permissions: 0644
-          content: |
-            blacklist r8169
-        - path: /etc/apt/sources.list.d/debian-nonfree.list
-          permissions: 0644
-          content: |
-            deb http://ftp.us.debian.org/debian trixie main non-free-firmware
-
-    - name: "Partition /dev/nvme0n1 if needed"
-      if: >-
-        [ $(sudo fdisk -l /dev/nvme0n1 | grep -q "83 Linux"; echo $?) -ne 0 ]
-      commands:
-        - parted /dev/nvme0n1 --script -- mkpart primary 0 -1
-
-    - name: "Format /dev/nvme0n1p1 if needed"
-      if: >-
-        [ $(sudo lsblk -o FSTYPE /dev/nvme0n1p1 | tail -n 1 | wc -l) -eq 0 ]
-      commands:
-        - mkfs.ext4 -F /dev/nvme0n1p1
-
-  boot:
-    - name: "Install Realtek firmware"
-      commands:
-        - apt-get update
-        - apt-get install -y firmware-realtek
-        - apt-get clean && rm -rf /var/lib/apt/lists/*
-        # - rmmod r8169
-        # - modprobe r8125
-        # - update-initramfs -u
-
-    - name: "Mount /dev/nvme0n1p1 under /mnt/longhorn"
-      commands:
-        - mount -o rw /dev/nvme0n1p1 /mnt/longhorn
-
-    - name: "Set up various kube environment variables"
-      environment:
-        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
-        CONTAINERD_ADDRESS: /run/k3s/containerd/containerd.sock
-        CONTAINERD_NAMESPACE: k8s.io
-
     # -- This is needed now so we can add the SOPS secret
     - name: "Add flux-system namespace manifest"
       files:
@@ -174,6 +150,30 @@ stages:
       downloads:
         - url: http://nas.onair/sops_secret.yaml
           path: /var/lib/rancher/k3s/server/manifests/sops-secret.yaml
+
+  initramfs:
+    - name: "Partition /dev/nvme0n1 if needed"
+      if: >-
+        [ $(sudo fdisk -l /dev/nvme0n1 | grep -q "83 Linux"; echo $?) -ne 0 ]
+      commands:
+        - parted /dev/nvme0n1 --script -- mkpart primary 0 -1
+
+    - name: "Format /dev/nvme0n1p1 if needed"
+      if: >-
+        [ $(sudo lsblk -o FSTYPE /dev/nvme0n1p1 | tail -n 1 | wc -l) -eq 0 ]
+      commands:
+        - mkfs.ext4 -F /dev/nvme0n1p1
+
+  boot:
+    - name: "Mount /dev/nvme0n1p1 under /mnt/longhorn"
+      commands:
+        - mount -o rw /dev/nvme0n1p1 /mnt/longhorn
+
+    - name: "Set up various kube environment variables"
+      environment:
+        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+        CONTAINERD_ADDRESS: /run/k3s/containerd/containerd.sock
+        CONTAINERD_NAMESPACE: k8s.io
 
     - name: "Bootstrap with Flux"
       commands:
