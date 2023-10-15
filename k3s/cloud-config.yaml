@@ -36,11 +36,8 @@ kubevip:
   eip: 192.168.1.8
 
 stages:
+  # Runs once
   after-install-chroot:
-    - name: "Increase display console text size"
-      commands:
-        - sed -i 's/8x16/16x32/g' /etc/default/console-setup
-
     - name: "Disable onboard network"
       files:
         - path: /etc/systemd/network/10-disable-onboard.network
@@ -154,20 +151,29 @@ stages:
         - url: http://nas.onair/sops_secret.yaml
           path: /var/lib/rancher/k3s/server/manifests/sops-secret.yaml
 
+  # Runs once
   initramfs:
+    - name: "Increase display console text size"
+      commands:
+        - sed -i 's/8x16/16x32/g' /etc/default/console-setup
+
     - name: "Partition /dev/nvme0n1 if needed"
       if: >-
-        [ $(sudo fdisk -l /dev/nvme0n1 | grep -q "83 Linux"; echo $?) -ne 0 ]
+        [ $(fdisk -l /dev/nvme0n1 | grep -q "83 Linux"; echo $?) -ne 0 ]
       commands:
-        - parted /dev/nvme0n1 --script -- mkpart primary 0 -1
+        - parted /dev/nvme0n1 --script -a optimal -- mklabel gpt mkpart longhorn ext4 0% 100%
 
     - name: "Format /dev/nvme0n1p1 if needed"
       if: >-
-        [ $(sudo lsblk -o FSTYPE /dev/nvme0n1p1 | tail -n 1 | wc -l) -eq 0 ]
+        [ $(lsblk -o FSTYPE /dev/nvme0n1p1 | grep -v -E '^$|FSTYPE' | wc -l) -eq 0 ]
       commands:
         - mkfs.ext4 -F /dev/nvme0n1p1
 
   boot:
+    - name: "Mount /dev/nvme0n1p1 under /mnt/longhorn"
+      commands:
+        - mount -o rw /dev/nvme0n1p1 /mnt/longhorn
+
     - name: "Set up various kube environment variables"
       environment:
         KUBECONFIG: /etc/rancher/k3s/k3s.yaml
@@ -177,11 +183,6 @@ stages:
     - name: "Bootstrap with Flux"
       commands:
         - bash /usr/local/lib/extensions/flux/bootstrap.sh &
-
-  fs:
-    - name: "Mount /dev/nvme0n1p1 under /mnt/longhorn"
-      commands:
-        - mount -o rw /dev/nvme0n1p1 /mnt/longhorn
 
 # # p2p is commented out because while I'd love to use it,
 # # I want to be weird and set different hostnames for control plane nodes
