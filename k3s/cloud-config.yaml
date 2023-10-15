@@ -169,11 +169,11 @@ stages:
       commands:
         - mkfs.ext4 -F /dev/nvme0n1p1
 
-  boot:
-    # - name: "Increase display console text size"
-    #   commands:
-    #     - sed -i 's/8x16/16x32/g' /etc/default/console-setup
+    - name: "Apply correct console defaults"
+      commands:
+        - service console-setup restart
 
+  boot:
     - name: "Mount /dev/nvme0n1p1 under /mnt/longhorn"
       commands:
         - mount -o rw /dev/nvme0n1p1 /mnt/longhorn
