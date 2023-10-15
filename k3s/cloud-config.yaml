@@ -170,7 +170,7 @@ stages:
         - mkfs.ext4 -F /dev/nvme0n1p1
 
   boot:
-    - name: "Apply correct console defaults"
+    - name: "Restart console"
       commands:
         - service console-setup restart
 
