@@ -3,7 +3,6 @@
 users:
   - name: tyzbit
     shell: /bin/bash
-    passwd: tyzbit
     groups:
       - admin
     ssh_authorized_keys:
@@ -84,15 +83,27 @@ stages:
             {{- end }}
 
   initramfs:
-    - name: "Mark built-in network interface as optional"
+    # TODO: https://kairos.io/docs/reference/build-from-scratch/
+    - name: "Configure to use m.2 Realtek card"
       files:
-        - path: /etc/systemd/network/30-disable-onboard.network
+        - path: /etc/systemd/network/10-disable-onboard.network
           permissions: 0644
           content: |
             [Match]
             Name=enp0*
             [Link]
             Unmanaged=true
+        - path: /etc/modprobe.d/blacklist-r8169.conf
+          permissions: 0644
+          content: |
+            blacklist r8169
+        - path: /etc/apt/sources.list.d/debian-nonfree.list
+          permissions: 0644
+          content: |
+            deb ftp.us.debian.org/debian trixie main non-free-firmware
+    - name: "Install Realtek firmware"
+      commands:
+        - apt-get install -y firmware-realtek
 
     - name: "Partition /dev/nvme0n1 if needed"
       if: >-
@@ -105,6 +116,11 @@ stages:
         [ $(sudo lsblk -o FSTYPE /dev/nvme0n1p1 | tail -n 1 | wc -l) -eq 0 ]
       commands:
         - mkfs.ext4 -F /dev/nvme0n1p1
+
+    # trying this out here
+    - name: "Increase display console text size"
+      commands:
+        - sed -i 's/8x16/16x32/g' /etc/default/console-setup
 
   boot:
     - name: "Increase display console text size"
