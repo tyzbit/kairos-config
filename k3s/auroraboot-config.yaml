@@ -5,7 +5,6 @@ release_version: v2.4.1
 # release_version: v2.4.0
 flavor: debian
 repository: kairos-io/kairos
-cloud_config: https://raw.githubusercontent.com/tyzbit/kairos-config/main/k3s/cloud-config.yaml
 # # -- This adds files to AuroraBoot to serve them but the arguments
 # # are also passed at boot-time, screwing up the boot
 # netboot:
