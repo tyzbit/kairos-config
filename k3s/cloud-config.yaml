@@ -12,8 +12,6 @@ install:
   auto: true
   device: /dev/sda
   reboot: true
-  extra-dirs-rootfs: &longhorn
-    - /mnt/longhorn
   bundles:
     - rootfs_path: /usr/local/lib/extensions/flux
       targets:
@@ -21,12 +19,6 @@ install:
         # # https://github.com/kairos-io/community-bundles/pull/53
         # - container://quay.io/kairos/community-bundles:flux_latest
         - container://docker.io/tyzbit/flux:latest
-
-upgrade:
-  extra-dirs-rootfs: *longhorn
-
-reset:
-  extra-dirs-rootfs: *longhorn
 
 growpart:
   devices: ["/"]
@@ -161,13 +153,13 @@ stages:
   initramfs:
     - name: "Partition /dev/nvme0n1 if needed"
       if: >-
-        [ $(fdisk -l /dev/nvme0n1 | grep -q "83 Linux"; echo $?) -ne 0 ]
+        [ $(fdisk -lo type /dev/nvme0n1 | tail -n 1) != "Linux" ]
       commands:
         - parted /dev/nvme0n1 --script -a optimal -- mklabel gpt mkpart longhorn ext4 0% 100%
 
     - name: "Format /dev/nvme0n1p1 if needed"
       if: >-
-        [ $(lsblk -o FSTYPE /dev/nvme0n1p1 | grep -v -E '^$|FSTYPE' | wc -l) -eq 0 ]
+        [ $(lsblk -no FSTYPE /dev/nvme0n1p1) != "ext4" ]
       commands:
         - mkfs.ext4 -F /dev/nvme0n1p1
 
@@ -177,7 +169,10 @@ stages:
         - service console-setup restart
 
     - name: "Mount /dev/nvme0n1p1 under /mnt/longhorn"
+      if: >-
+        [ -e /dev/nvme0n1p1 ]
       commands:
+        - mkdir /mnt/longhorn
         - mount -o rw /dev/nvme0n1p1 /mnt/longhorn
 
     - name: "Set up various kube environment variables"
