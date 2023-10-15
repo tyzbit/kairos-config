@@ -52,26 +52,26 @@ stages:
             [Link]
             Unmanaged=true
 
-    # TODO: https://kairos.io/docs/reference/build-from-scratch/
-    - name: "Configure to use m.2 Realtek card"
-      files:
-        - path: /etc/modprobe.d/blacklist-r8169.conf
-          permissions: 0644
-          content: |
-            blacklist r8169
-        - path: /etc/apt/sources.list.d/debian-nonfree.list
-          permissions: 0644
-          content: |
-            deb http://ftp.us.debian.org/debian trixie main non-free-firmware
+    # # TODO: https://kairos.io/docs/reference/build-from-scratch/
+    # - name: "Configure to use m.2 Realtek card"
+    #   files:
+    #     - path: /etc/modprobe.d/blacklist-r8169.conf
+    #       permissions: 0644
+    #       content: |
+    #         blacklist r8169
+    #     - path: /etc/apt/sources.list.d/debian-nonfree.list
+    #       permissions: 0644
+    #       content: |
+    #         deb http://ftp.us.debian.org/debian trixie main non-free-firmware
 
-    - name: "Install Realtek firmware"
-      commands:
-        - apt-get update
-        - apt-get install -y firmware-realtek
-        - apt-get clean && rm -rf /var/lib/apt/lists/*
-        # - rmmod r8169
-        # - modprobe r8125
-        - update-initramfs -u
+    # - name: "Install Realtek firmware"
+    #   commands:
+    #     - apt-get update
+    #     - apt-get install -y firmware-realtek
+    #     - apt-get clean && rm -rf /var/lib/apt/lists/*
+    #     # - rmmod r8169
+    #     # - modprobe r8125
+    #     - update-initramfs -u
 
     # # -- The pre config has the p2p.network_token
     # # -- (only `commands`,`entities` and `files` may have templating)
@@ -196,7 +196,7 @@ stages:
 # # like I do above
 # # See https://github.com/kairos-io/kairos/issues/1877
 # p2p:
-#   network_id: spartacus
+#   network_id: corpus
 #   network_token: [[.p2p.network_token]]
 #   dns: false
 #   # disable_dht: true
@@ -220,5 +220,5 @@ flux:
   github:
     owner: tyzbit
     repository: fleet-infra
-    path: clusters/spartacus # FIXME
+    path: clusters/corpus # FIXME
     components-extra: image-reflector-controller,image-automation-controller
