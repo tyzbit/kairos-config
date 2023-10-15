@@ -82,12 +82,11 @@ stages:
               enabled: true
             {{- end }}
 
-  rootfs:
+  initramfs:
     - name: "Increase display console text size"
       commands:
         - sed -i 's/8x16/16x32/g' /sysroot/etc/default/console-setup
 
-  initramfs:
     # TODO: https://kairos.io/docs/reference/build-from-scratch/
     - name: "Configure to use m.2 Realtek card"
       files:
@@ -108,7 +107,9 @@ stages:
             deb http://ftp.us.debian.org/debian trixie main non-free-firmware
     - name: "Install Realtek firmware"
       commands:
+        - apt-get update
         - apt-get install -y firmware-realtek
+        - apt-get clean && rm -rf /var/lib/apt/lists/*
         # - sudo rmmod r8169
         - update-initramfs -u
 
@@ -123,10 +124,6 @@ stages:
         [ $(sudo lsblk -o FSTYPE /dev/nvme0n1p1 | tail -n 1 | wc -l) -eq 0 ]
       commands:
         - mkfs.ext4 -F /dev/nvme0n1p1
-
-    # - name: "Increase display console text size"
-    #   commands:
-    #     - sed -i 's/8x16/16x32/g' /etc/default/console-setup
 
   boot:
     - name: "Mount /dev/nvme0n1p1 under /mnt/longhorn"
