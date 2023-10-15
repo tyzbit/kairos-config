@@ -41,8 +41,7 @@ stages:
       commands:
         - sed -i 's/8x16/16x32/g' /etc/default/console-setup
 
-    # TODO: https://kairos.io/docs/reference/build-from-scratch/
-    - name: "Configure to use m.2 Realtek card"
+    - name: "Disable onboard network"
       files:
         - path: /etc/systemd/network/10-disable-onboard.network
           permissions: 0644
@@ -51,23 +50,27 @@ stages:
             Name=enp0*
             [Link]
             Unmanaged=true
-        - path: /etc/modprobe.d/blacklist-r8169.conf
-          permissions: 0644
-          content: |
-            blacklist r8169
-        - path: /etc/apt/sources.list.d/debian-nonfree.list
-          permissions: 0644
-          content: |
-            deb http://ftp.us.debian.org/debian trixie main non-free-firmware
 
-    - name: "Install Realtek firmware"
-      commands:
-        - apt-get update
-        - apt-get install -y firmware-realtek
-        - apt-get clean && rm -rf /var/lib/apt/lists/*
-        # - rmmod r8169
-        # - modprobe r8125
-        # - update-initramfs -u
+    # # TODO: https://kairos.io/docs/reference/build-from-scratch/
+    # - name: "Configure to use m.2 Realtek card"
+    #   files:
+    #     - path: /etc/modprobe.d/blacklist-r8169.conf
+    #       permissions: 0644
+    #       content: |
+    #         blacklist r8169
+    #     - path: /etc/apt/sources.list.d/debian-nonfree.list
+    #       permissions: 0644
+    #       content: |
+    #         deb http://ftp.us.debian.org/debian trixie main non-free-firmware
+
+    # - name: "Install Realtek firmware"
+    #   commands:
+    #     - apt-get update
+    #     - apt-get install -y firmware-realtek
+    #     - apt-get clean && rm -rf /var/lib/apt/lists/*
+    #     # - rmmod r8169
+    #     # - modprobe r8125
+    #     # - update-initramfs -u
 
     # # -- The pre config has the p2p.network_token
     # # -- (only `commands`,`entities` and `files` may have templating)
@@ -165,10 +168,6 @@ stages:
         - mkfs.ext4 -F /dev/nvme0n1p1
 
   boot:
-    - name: "Mount /dev/nvme0n1p1 under /mnt/longhorn"
-      commands:
-        - mount -o rw /dev/nvme0n1p1 /mnt/longhorn
-
     - name: "Set up various kube environment variables"
       environment:
         KUBECONFIG: /etc/rancher/k3s/k3s.yaml
@@ -178,6 +177,11 @@ stages:
     - name: "Bootstrap with Flux"
       commands:
         - bash /usr/local/lib/extensions/flux/bootstrap.sh &
+
+  fs:
+    - name: "Mount /dev/nvme0n1p1 under /mnt/longhorn"
+      commands:
+        - mount -o rw /dev/nvme0n1p1 /mnt/longhorn
 
 # # p2p is commented out because while I'd love to use it,
 # # I want to be weird and set different hostnames for control plane nodes
