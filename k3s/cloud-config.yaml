@@ -32,8 +32,8 @@ growpart:
   devices: ["/"]
 
 kubevip:
-  enabled: true
-  eip: 192.168.1.8
+  enabled: false
+  # eip: 192.168.1.8
 
 stages:
   # Runs once
