@@ -24,16 +24,12 @@ install:
 
 upgrade:
   extra-dirs-rootfs: *longhorn
-
 reset:
   extra-dirs-rootfs: *longhorn
 
-growpart:
-  devices: ["/"]
+growpart: { "devices": ["/"] }
 
-kubevip:
-  enabled: false
-  # eip: 192.168.1.8
+kubevip: { "enabled": false }
 
 stages:
   # Runs once
@@ -74,12 +70,12 @@ stages:
     #     - update-initramfs -u
 
     # # -- The pre config has the p2p.network_token
-    # # -- (only `commands`,`entities` and `files` may have templating)
     - name: "Download additional pre-config"
       downloads:
         - url: http://nas.onair/sensitive_configs.yaml
           path: /oem/50_sensitive_configs.yaml
 
+    # # -- (only `commands`,`entities` and `files` may have templating)
     - name: "Configure as control plane or worker"
       files:
         - path: /oem/60_k3s_config.yaml
@@ -97,9 +93,7 @@ stages:
                   {{- $first = true -}}
               {{- end -}}
             {{- end -}}
-            {{/* I use the character range of https://en.bitcoin.it/wiki/Bech32 */}}
-            {{/* so there are no lookalike characters */}}
-            {{- $id := randAlpha 16 | regexReplaceAll "[^qpzry9x8gf2tvdw0s3jn54khce6mua7l]" "" | trunc 5 -}}
+            {{- $id := trunc 5 .MachineID -}}
             {{- if $control }}
             hostname: neuron-{{ $id }}
             k3s:
@@ -138,21 +132,6 @@ stages:
           path: /var/lib/rancher/k3s/server/manifests/calico-operator.yaml
         - url: https://raw.githubusercontent.com/tyzbit/kairos-config/main/k3s/manifests/calico-crds.yaml
           path: /var/lib/rancher/k3s/server/manifests/calico-crds.yaml
-    - name: "Add CalicoNodeStatus resource"
-      files:
-        - path: /var/lib/rancher/k3s/server/manifests/calico-node-status.yaml
-          content: |
-            apiVersion: crd.projectcalico.org/v1
-            kind: CalicoNodeStatus
-            metadata:
-              name: {{ .Values.node.hostname }}
-            spec:
-              classes:
-                - Agent
-                - BGP
-                - Routes
-              node: {{ .Values.node.hostname }}
-              updatePeriodSeconds: 10
 
     - name: "Download SOPS secret"
       downloads:
@@ -177,6 +156,23 @@ stages:
     - name: "Restart console"
       commands:
         - service console-setup restart
+
+    # This must be here because we messed with the hostname _during_ the install
+    - name: "Add CalicoNodeStatus resource"
+      files:
+        - path: /var/lib/rancher/k3s/server/manifests/calico-node-status.yaml
+          content: |
+            apiVersion: crd.projectcalico.org/v1
+            kind: CalicoNodeStatus
+            metadata:
+              name: {{ .Values.node.hostname }}
+            spec:
+              classes:
+                - Agent
+                - BGP
+                - Routes
+              node: {{ .Values.node.hostname }}
+              updatePeriodSeconds: 10
 
     - name: "Mount /dev/nvme0n1p1 under /var/lib/longhorn"
       if: >-
