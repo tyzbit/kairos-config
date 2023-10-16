@@ -170,7 +170,7 @@ stages:
 
     - name: "Mount /dev/nvme0n1p1 under /mnt/longhorn"
       commands:
-        - mkdir /mnt/longhorn
+        - mkdir -p /mnt/longhorn
         - mount -o rw /dev/nvme0n1p1 /mnt/longhorn
 
     - name: "Set up various kube environment variables"
