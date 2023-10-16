@@ -95,7 +95,7 @@ stages:
             {{- end -}}
             {{/* I use the character range of https://en.bitcoin.it/wiki/Bech32 */}}
             {{/* so there are no lookalike characters */}}
-            {{- $id := randAlpha 16 | regexReplaceAll "[^qpzry9x8gf2tvdw0s3jn54khce6mua7l]" "" | trunc 5 -}}
+            {{- $id := regexReplaceAll "[^qpzry9x8gf2tvdw0s3jn54khce6mua7l]" (randAlpha 32 | lower) "" | trunc 5 -}}
             {{- if $control }}
             hostname: neuron-{{ $id }}
             k3s:
