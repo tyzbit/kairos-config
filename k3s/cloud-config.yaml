@@ -169,8 +169,6 @@ stages:
         - service console-setup restart
 
     - name: "Mount /dev/nvme0n1p1 under /mnt/longhorn"
-      if: >-
-        [ -e /dev/nvme0n1p1 ]
       commands:
         - mkdir /mnt/longhorn
         - mount -o rw /dev/nvme0n1p1 /mnt/longhorn
