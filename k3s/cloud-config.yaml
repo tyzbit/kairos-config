@@ -226,5 +226,5 @@ flux:
   github:
     owner: tyzbit
     repository: fleet-infra
-    path: clusters/corpus # FIXME
+    path: clusters/corpus
     components-extra: image-reflector-controller,image-automation-controller
