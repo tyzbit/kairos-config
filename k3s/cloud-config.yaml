@@ -14,7 +14,7 @@ install:
   reboot: true
   grub_options:
     extra_cmdline: >-
-      video=1280x720
+      video=1024x768
   extra-dirs-rootfs: &longhorn
     - /var/lib/longhorn
   bundles:
