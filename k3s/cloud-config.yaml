@@ -12,6 +12,9 @@ install:
   auto: true
   device: /dev/sda
   reboot: true
+  grub_options:
+    extra_cmdline: >-
+      video=1280x720
   extra-dirs-rootfs: &longhorn
     - /var/lib/longhorn
   bundles:
@@ -34,11 +37,6 @@ kubevip:
   enabled: false
 
 stages:
-  before-install:
-    - name: "Check mounts"
-      commands:
-        - mount
-
   # Runs once during first install
   after-install-chroot:
     # - name: "Increase display console text size"
@@ -162,10 +160,6 @@ stages:
         - mkfs.ext4 -F /dev/nvme0n1p1
 
   boot:
-    # - name: "Restart console"
-    #   commands:
-    #     - service console-setup restart
-
     # # This doesn't work to add new nodes at the moment
     # # I can use the `reconcile` step but that's kinda hacky
     # - name: "Add CalicoNodeStatus resource"
