@@ -37,12 +37,7 @@ kubevip:
   enabled: false
 
 stages:
-  # Runs once during first install
   after-install-chroot:
-    # - name: "Increase display console text size"
-    #   commands:
-    #     - sed -i 's/8x16/16x32/g' /etc/default/console-setup
-
     - name: "Disable onboard network"
       files:
         - path: /etc/systemd/network/10-disable-onboard.network
@@ -132,6 +127,10 @@ stages:
             kind: Namespace
             metadata:
               name: flux-system
+    - name: "Download SOPS secret"
+      downloads:
+        - url: http://nas.onair/sops_secret.yaml
+          path: /var/lib/rancher/k3s/server/manifests/sops-secret.yaml
 
     - name: "Install Calico"
       downloads:
@@ -140,13 +139,7 @@ stages:
         - url: https://raw.githubusercontent.com/tyzbit/kairos-config/main/k3s/manifests/calico-crds.yaml
           path: /var/lib/rancher/k3s/server/manifests/calico-crds.yaml
 
-    - name: "Download SOPS secret"
-      downloads:
-        - url: http://nas.onair/sops_secret.yaml
-          path: /var/lib/rancher/k3s/server/manifests/sops-secret.yaml
-
-  # Runs once
-  initramfs:
+  boot:
     - name: "Partition /dev/nvme0n1 if needed"
       if: >-
         [ $(fdisk -lo type /dev/nvme0n1 | tail -n 1) != "Linux" ]
@@ -158,25 +151,6 @@ stages:
         [ $(lsblk -no FSTYPE /dev/nvme0n1p1) != "ext4" ]
       commands:
         - mkfs.ext4 -F /dev/nvme0n1p1
-
-  boot:
-    # # This doesn't work to add new nodes at the moment
-    # # I can use the `reconcile` step but that's kinda hacky
-    # - name: "Add CalicoNodeStatus resource"
-    #   files:
-    #     - path: /var/lib/rancher/k3s/server/manifests/calico-node-status.yaml
-    #       content: |
-    #         apiVersion: crd.projectcalico.org/v1
-    #         kind: CalicoNodeStatus
-    #         metadata:
-    #           name: {{ .Values.node.hostname }}
-    #         spec:
-    #           classes:
-    #             - Agent
-    #             - BGP
-    #             - Routes
-    #           node: {{ .Values.node.hostname }}
-    #           updatePeriodSeconds: 10
 
     - name: "Mount /dev/nvme0n1p1 under /var/lib/longhorn"
       if: >-
