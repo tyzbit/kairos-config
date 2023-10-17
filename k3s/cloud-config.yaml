@@ -142,6 +142,10 @@ stages:
         - url: http://nas.onair/sops_secret.yaml
           path: /var/lib/rancher/k3s/server/manifests/sops-secret.yaml
 
+    - name: "Check mounts"
+      commands:
+        - mount
+
   # Runs once
   initramfs:
     - name: "Partition /dev/nvme0n1 if needed"
