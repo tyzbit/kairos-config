@@ -83,15 +83,14 @@ stages:
             #cloud-config
             {{- $control := false -}}
             {{- $first := false -}}
+            {{- $macs := list "48:4d:7e:e7:6a:27" "8c:ae:4c:dd:1f:5b" "8c:ae:4c:dd:18:7a" "8c:ae:4c:dd:18:54" -}}
             {{- range $net := .Values.network -}}
-              {{- range $mac := list "48:4d:7e:e7:6a:27" "8c:ae:4c:dd:1f:5b" "8c:ae:4c:dd:18:7a" "8c:ae:4c:dd:18:54" -}}
-                {{- if eq $net.macaddress $mac -}}
-                    {{- $control = true -}}
-                {{- end -}}
+              {{- if has $net.macaddress $macs -}}
+                {{- $control = true -}}
               {{- end -}}
-              {{- if eq $net.macaddress "48:4d:7e:e7:6a:27" -}}
-                  {{- $first = true -}}
-              {{- end -}}
+              {{- if eq $net.macaddress (first $macs) -}}
+                {{- $first = true -}}
+              {{ end -}}
             {{- end -}}
             {{/* I use the character range of https://en.bitcoin.it/wiki/Bech32 */}}
             {{/* so there are no lookalike characters */}}
