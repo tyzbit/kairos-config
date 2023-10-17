@@ -12,6 +12,8 @@ install:
   auto: true
   device: /dev/sda
   reboot: true
+  grub_options:
+    extra_cmdline: "GRUB_GFXMODE=1280x720"
   extra-dirs-rootfs: &longhorn
     - /var/lib/longhorn
   bundles:
@@ -27,16 +29,18 @@ upgrade:
 reset:
   extra-dirs-rootfs: *longhorn
 
-growpart: { "devices": ["/"] }
+growpart:
+  devices: ["/"]
 
-kubevip: { "enabled": false }
+kubevip:
+  enabled: false
 
 stages:
-  # Runs once
+  # Runs once during first install
   after-install-chroot:
-    - name: "Increase display console text size"
-      commands:
-        - sed -i 's/8x16/16x32/g' /etc/default/console-setup
+    # - name: "Increase display console text size"
+    #   commands:
+    #     - sed -i 's/8x16/16x32/g' /etc/default/console-setup
 
     - name: "Disable onboard network"
       files:
@@ -155,26 +159,27 @@ stages:
         - mkfs.ext4 -F /dev/nvme0n1p1
 
   boot:
-    - name: "Restart console"
-      commands:
-        - service console-setup restart
+    # - name: "Restart console"
+    #   commands:
+    #     - service console-setup restart
 
-    # This must be here because we messed with the hostname _during_ the install
-    - name: "Add CalicoNodeStatus resource"
-      files:
-        - path: /var/lib/rancher/k3s/server/manifests/calico-node-status.yaml
-          content: |
-            apiVersion: crd.projectcalico.org/v1
-            kind: CalicoNodeStatus
-            metadata:
-              name: {{ .Values.node.hostname }}
-            spec:
-              classes:
-                - Agent
-                - BGP
-                - Routes
-              node: {{ .Values.node.hostname }}
-              updatePeriodSeconds: 10
+    # # This doesn't work to add new nodes at the moment
+    # # I can use the `reconcile` step but that's kinda hacky
+    # - name: "Add CalicoNodeStatus resource"
+    #   files:
+    #     - path: /var/lib/rancher/k3s/server/manifests/calico-node-status.yaml
+    #       content: |
+    #         apiVersion: crd.projectcalico.org/v1
+    #         kind: CalicoNodeStatus
+    #         metadata:
+    #           name: {{ .Values.node.hostname }}
+    #         spec:
+    #           classes:
+    #             - Agent
+    #             - BGP
+    #             - Routes
+    #           node: {{ .Values.node.hostname }}
+    #           updatePeriodSeconds: 10
 
     - name: "Mount /dev/nvme0n1p1 under /var/lib/longhorn"
       if: >-
