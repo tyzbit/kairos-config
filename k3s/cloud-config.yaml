@@ -13,7 +13,9 @@ install:
   device: /dev/sda
   reboot: true
   grub_options:
-    extra_cmdline: "GRUB_GFXMODE=1280x720"
+    extra_cmdline: >-
+      video=1280x720
+      GRUB_GFXMODE=1280x720
   extra-dirs-rootfs: &longhorn
     - /var/lib/longhorn
   bundles:
