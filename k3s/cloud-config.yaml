@@ -18,12 +18,12 @@ install:
   extra-dirs-rootfs: &longhorn
     - /var/lib/longhorn
   bundles:
-    - rootfs_path: /usr/local/lib/extensions/flux
-      targets:
+    - targets:
         # # If this is merged, use the commented out line instead
         # # https://github.com/kairos-io/community-bundles/pull/53
         # - container://quay.io/kairos/community-bundles:flux_latest
-        - container://docker.io/tyzbit/flux:latest
+        - run://docker.io/tyzbit/flux:run-latest
+      # rootfs_path: /usr/local/lib/extensions/flux
 
 upgrade:
   extra-dirs-rootfs: *longhorn
@@ -165,9 +165,9 @@ stages:
         CONTAINERD_ADDRESS: /run/k3s/containerd/containerd.sock
         CONTAINERD_NAMESPACE: k8s.io
 
-    - name: "Bootstrap with Flux"
-      commands:
-        - bash /usr/local/lib/extensions/flux/bootstrap.sh &
+    # - name: "Bootstrap with Flux"
+    #   commands:
+    #     - bash /usr/local/lib/extensions/flux/bootstrap.sh &
 
 # # p2p is commented out because while I'd love to use it,
 # # I want to be weird and set different hostnames for control plane nodes
