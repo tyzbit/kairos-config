@@ -34,6 +34,11 @@ kubevip:
   enabled: false
 
 stages:
+  before-install:
+    - name: "Check mounts"
+      commands:
+        - mount
+
   # Runs once during first install
   after-install-chroot:
     # - name: "Increase display console text size"
@@ -141,10 +146,6 @@ stages:
       downloads:
         - url: http://nas.onair/sops_secret.yaml
           path: /var/lib/rancher/k3s/server/manifests/sops-secret.yaml
-
-    - name: "Check mounts"
-      commands:
-        - mount
 
   # Runs once
   initramfs:
