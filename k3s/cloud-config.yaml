@@ -23,7 +23,7 @@ bundles:
       # # If this is merged, use the commented out line instead
       # # https://github.com/kairos-io/community-bundles/pull/53
       # - run://quay.io/kairos/community-bundles:flux_latest
-      - run://docker.io/tyzbit/flux:run-latest
+      - run://docker.io/tyzbit/flux:latest
 
 upgrade:
   extra-dirs-rootfs: *longhorn
