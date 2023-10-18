@@ -1,0 +1,5 @@
+repos:
+  - repo: https://github.com/tyzbit/kairos-config
+    rev: pre-commit-0.1.0
+    hooks:
+      - id: kairosctl

@@ -1,0 +1,8 @@
+- id: helm-docs
+  args: []
+  description: Validates a cloud-config using kairosctl
+  entry: git-hook/kairosctl
+  files: cloud-config.yaml
+  language: script
+  name: Helm Docs
+  require_serial: true

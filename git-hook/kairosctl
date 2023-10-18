@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+set -e
+
+nerdctl run --rm -v $PWD:/configs tyzbit/kairosctl sh -c \
+"""
+for config in /configs/*/cloud-config.yaml; do 
+  echo -n \"\$config: \"; 
+  kairosctl validate \$config;
+  if [[ $? -eq 0 ]]; then 
+    echo \"valid\";
+  fi
+done
+"""
