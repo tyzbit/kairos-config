@@ -23,7 +23,7 @@ bundles:
       # # If this is merged, use the commented out line instead
       # # https://github.com/kairos-io/community-bundles/pull/53
       # - container://quay.io/kairos/community-bundles:flux_latest
-      - run://docker.io/tyzbit/flux:run-latest
+      - container://docker.io/tyzbit/flux:run-latest
     # rootfs_path: /usr/local/lib/extensions/flux
 
 upgrade:
