@@ -196,7 +196,6 @@ stages:
 # -- Bundle configs
 # -- Flux
 flux:
-  kube_service: kubeadm
   github:
     owner: tyzbit
     repository: fleet-infra
