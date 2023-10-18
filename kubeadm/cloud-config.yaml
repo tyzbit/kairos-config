@@ -1,0 +1,64 @@
+#cloud-config
+
+# Define the user accounts on the node.
+users:
+  - name: "kairos" # kairos gets sudo automatically so I don't change it
+    # passwd: "password" # I don't set a password because I don't need one
+    ssh_authorized_keys:
+      - github:tyzbit
+
+install:
+  auto: true
+  device: /dev/sda
+  reboot: true
+
+growpart:
+  devices: ["/"]
+
+kubevip:
+  enable: false
+
+k3s:
+  enabled: false
+
+  boot:
+    - name: "Setup hostname"
+      hostname: >-
+        {{if eq .Values.p2p.role master }}
+          neuron
+        {{ else }}
+          myocite
+        {{ end }}
+        -{{ trunc 4 .MachineID }}
+    - name: "Install Calico"
+      downloads:
+        - url: https://raw.githubusercontent.com/projectcalico/calico/v3.26.1/manifests/tigera-operator.yaml
+          path: /var/lib/rancher/k3s/server/manifests/calico-operator.yaml
+        - url: https://raw.githubusercontent.com/tyzbit/kairos-config/main/kubeadm/manifests/calico-crds.yaml
+          path: /var/lib/rancher/k3s/server/manifests/calico-crds.yaml
+
+  after-install-chroot:
+    # I have a tiny monitor
+    - name: "Increase display console text size"
+      commands:
+        - sed -i 's/8x16/16x32/g' /etc/default/console-setup
+    # Creates the data dir after install inside the final system chroot
+    - &createdatadir
+      name: "Create data dir"
+      commands:
+        - mkdir -p /mnt/longhorn
+    # # Formats the disk ONLY after-install and just once. Extra checks can be added here, so we don't reformat it
+    # # This can also go in the after-install stage, but its just important to do it just once
+    # - name: "Format /dev/nvme0"
+    #   commands:
+    #     - mkfs.ext4 -F /dev/nvme0p1
+
+  # Creates the data dir after reset inside the final system chroot, just in case it's not there
+  after-reset-chroot:
+    - <<: *createdatadir
+
+  # Creates the data dir after upgrade inside the final system chroot, just in case it's not there
+  after-upgrade-chroot:
+    - <<: *createdatadir
+# p2p is only supported with k3s
+# https://kairos.io/docs/installation/p2p/

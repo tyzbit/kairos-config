@@ -1,0 +1,114 @@
+#cloud-config
+hostname: hyades
+
+# Define the user accounts on the node.
+users:
+  - name: "tyzbit" # the kairos user is not created
+    # this is here to remind me the key is `passwd` not `password`
+    # passwd: "password"
+    shell: /bin/bash
+    groups:
+      - admin
+    ssh_authorized_keys:
+      - github:tyzbit
+
+install:
+  auto: true
+  device: /dev/sda
+  reboot: true
+
+growpart:
+  devices: ["/"]
+
+kubevip:
+  enable: false
+
+k3s:
+  enabled: true
+  args:
+    - --disable=traefik,servicelb
+    - --flannel-backend=none
+    # recommended in addition to disabling flannel
+    - --disable-network-policy
+    - --service-cidr 172.23.64.0/18
+    # so my user can use kubectl immediately
+    - --write-kubeconfig-mode 0644
+
+stages:
+  initramfs:
+    # Mounts the disk under the /data dir during initramfs on each boot, with RW. Extra options can be added to the mount here
+    - name: "Mount /dev/nvme0n1 under /mnt/longhorn"
+      commands:
+        - mount -o rw /dev/nvme0n1 /mnt/longhorn
+
+  boot:
+    - name: "Set up local kubeconfig"
+      environment:
+        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+        CONTAINERD_ADDRESS: /run/k3s/containerd/containerd.sock
+        CONTAINERD_NAMESPACE: k8s.io
+    - name: "Install Calico"
+      downloads:
+        - url: https://raw.githubusercontent.com/projectcalico/calico/v3.26.1/manifests/tigera-operator.yaml
+          path: /var/lib/rancher/k3s/server/manifests/calico-operator.yaml
+        - url: https://raw.githubusercontent.com/tyzbit/kairos-config/main/k3s-single-node/manifests/calico-crds.yaml
+          path: /var/lib/rancher/k3s/server/manifests/calico-crds.yaml
+
+    # # If I want to do this, I should bake Flux into the base image
+    # - name: "Get Flux"
+    #   commands:
+    #     - curl -L -o /tmp/flux.tar.gz https://github.com/fluxcd/flux2/releases/download/v2.1.1/flux_2.1.1_linux_amd64.tar.gz
+    # - name: "Install Flux"
+    #   commands:
+    #     - tar xzf /tmp/flux.tar.gz -C /usr/bin
+    #     - chmod +x /usr/bin/flux
+
+  after-install-chroot:
+    # I have a tiny monitor
+    - &consolesize
+      name: "Increase display console text size"
+      commands:
+        - sed -i 's/8x16/16x32/g' /etc/default/console-setup
+
+    # Additional disk (NVMe) related stuff
+    - name: "Create partition on /dev/nvme0n1 if needed"
+      if: fdisk /dev/nvme0n1 --list | grep -q -E '^/dev/nvme0n1p1' || exit 0
+      commands:
+        - wipefs -a /dev/nvme0n1
+        - >-
+          bash -c
+          "echo 'type=83' | sfdisk /dev/nvme0n1"
+    # Formats the disk ONLY after-install and just once. Extra checks can be added here, so we don't reformat it
+    # This can also go in the after-install stage, but its just important to do it just once
+    - name: "Format /dev/nvme0n1p1 if needed"
+      if: "[[ $(lsblk -o FSTYPE /dev/nvme0n1p1 | tail -n 1 | wc -l) -eq 0 ]]"
+      commands:
+        - mkfs.ext4 -F /dev/nvme0n1p1
+    # Creates the data dir after install inside the final system chroot
+    - &createdatadir
+      name: "Create data dir"
+      commands:
+        - mkdir -p /mnt/longhorn
+
+  #  # If I want to do this, I should bake Flux into the base image
+  #   # Self-bootstrap the cluster
+  #   - name: "Bootstrap Flux"
+  #     commands:
+  #     # this has been provided via commandline to aurora: `--set custom.github_token="abcdef"`
+  #       - >-
+  #         bash -c export GITHUB_TOKEN='{{ .custom.github_token }}' &&
+  #         flux bootstrap github
+  #         --owner=tyzbit
+  #         --repository=fleet-infra
+  #         --path=clusters/{{ .Values.node.hostname }}
+  #         --components-extra=image-reflector-controller,image-automation-controller
+
+  after-reset-chroot:
+    - <<: *consolesize
+    # Creates the data dir after reset inside the final system chroot, just in case it's not there
+    - <<: *createdatadir
+
+  after-upgrade-chroot:
+    - <<: *consolesize
+    # Creates the data dir after upgrade inside the final system chroot, just in case it's not there
+    - <<: *createdatadir
