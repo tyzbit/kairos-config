@@ -3,7 +3,13 @@ version=v2.3.1
 
 set -e
 
-nerdctl run --rm -v $PWD:/configs ghcr.io/tyzbit/kairosctl:$version sh -c \
+command=docker
+
+if command nerdctl &>/dev/null; then
+  command=nerdctl
+fi
+
+$command run --rm -v $PWD:/configs ghcr.io/tyzbit/kairosctl:$version sh -c \
 """
 for config in /configs/*/cloud-config.yaml; do 
   echo -n \"\$config: \"; 
