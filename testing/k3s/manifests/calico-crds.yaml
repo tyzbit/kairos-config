@@ -1,0 +1,62 @@
+# This section includes base Calico installation configuration.
+# For more information, see: https://projectcalico.docs.tigera.io/master/reference/installation/api#operator.tigera.io/v1.Installation
+apiVersion: operator.tigera.io/v1
+kind: Installation
+metadata:
+  name: default
+spec:
+  calicoNetwork:
+    bgp: Enabled
+    hostPorts: Enabled
+    ipPools:
+      - blockSize: 24
+        cidr: 172.23.0.0/18
+        encapsulation: VXLANCrossSubnet
+        natOutgoing: Enabled
+        nodeSelector: all()
+    multiInterfaceMode: None
+    nodeAddressAutodetectionV4:
+      firstFound: true
+  cni:
+    ipam:
+      type: Calico
+    type: Calico
+  flexVolumePath: /usr/libexec/kubernetes/kubelet-plugins/volume/exec/
+  nodeUpdateStrategy:
+    rollingUpdate:
+      maxUnavailable: 1
+    type: RollingUpdate
+  variant: Calico
+---
+# This section configures the Calico API server.
+# For more information, see: https://projectcalico.docs.tigera.io/master/reference/installation/api#operator.tigera.io/v1.APIServer
+apiVersion: operator.tigera.io/v1
+kind: APIServer
+metadata:
+  name: default
+spec: {}
+---
+apiVersion: crd.projectcalico.org/v1
+kind: BGPConfiguration
+metadata:
+  name: default
+spec:
+  asNumber: 64514
+  nodeToNodeMeshEnabled: true
+  serviceClusterIPs:
+    - cidr: 172.23.64.0/18
+  serviceExternalIPs:
+    - cidr: 172.23.128.0/18
+  serviceLoadBalancerIPs:
+    - cidr: 172.23.192.0/18
+---
+## BGP configuration specific to my network
+apiVersion: crd.projectcalico.org/v1
+kind: BGPPeer
+metadata:
+  name: router
+spec:
+  asNumber: 64512
+  keepOriginalNextHop: true
+  maxRestartTime: 15m0s
+  peerIP: 192.168.1.1

@@ -11,7 +11,7 @@ fi
 
 $command run --rm -v $PWD:/configs ghcr.io/tyzbit/kairosctl:$version sh -c \
 """
-for config in /configs/*/cloud-config.yaml; do 
+find . -name cloud-config.yaml | while read config; do 
   echo -n \"\$config: \"; 
   kairosctl validate \$config;
   if [[ \$? -eq 0 ]]; then 

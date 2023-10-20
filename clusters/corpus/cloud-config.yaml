@@ -1,0 +1,170 @@
+#cloud-config
+
+users:
+  - name: tyzbit
+    shell: /bin/bash
+    groups:
+      - admin
+    ssh_authorized_keys:
+      - github:tyzbit
+
+install:
+  auto: true
+  device: /dev/sda
+  reboot: true
+  grub_options:
+    extra_cmdline: >-
+      video=1280x720
+  extra-dirs-rootfs: &longhorn
+    - /var/lib/longhorn
+
+upgrade:
+  extra-dirs-rootfs: *longhorn
+reset:
+  extra-dirs-rootfs: *longhorn
+
+kubevip:
+  enabled: false
+
+growpart:
+  devices: ["/"]
+
+bundles:
+  - targets:
+      - run://quay.io/kairos/community-bundles:flux_latest
+
+flux:
+  github:
+    owner: tyzbit
+    repository: fleet-infra
+    path: clusters/corpus
+    components-extra: image-reflector-controller,image-automation-controller
+
+stages:
+  after-install-chroot:
+    - name: "Add cluster-specific manifests from GitHub"
+      commands:
+        - |
+          repo=tyzbit/kairos-config
+          ref=main
+          path=clusters/corpus/manifests
+          k3s_manifest_dir=/var/lib/rancher/k3s/server/manifests
+
+          url="https://api.github.com/repos/$repo/contents/$path?ref=$ref"
+          while read manifest; do
+            source="https://raw.githubusercontent.com/$repo/$ref/$path/$manifest"
+            curl -s "$source" -o "$k3s_manifest_dir/$manifest"
+          done <<< "$(curl -sL "$url" | jq -r '.[] | select(.type == "file") | .name')"
+
+    - name: "Download sensitive config values"
+      downloads:
+        - url: http://nas.onair/sensitive_configs.yaml
+          path: /oem/50_sensitive_configs.yaml
+    - name: "Download SOPS secret"
+      downloads:
+        - url: http://nas.onair/sops_secret.yaml
+          path: /var/lib/rancher/k3s/server/manifests/sops-secret.yaml
+
+    - name: "Disable onboard network"
+      files:
+        - path: /etc/systemd/network/10-disable-onboard.network
+          permissions: 0644
+          content: |
+            [Match]
+            Name=enp0*
+            [Link]
+            Unmanaged=true
+
+    # -- (only `commands`,`entities` and `files` may have templating)
+    - name: "Configure as control plane or worker by MAC"
+      files:
+        - path: /oem/60_k3s_config.yaml
+          content: |
+            #cloud-config
+            {{- $control := false -}}
+            {{- $first := false -}}
+            {{- $macs := list "48:4d:7e:e7:6a:27" "8c:ae:4c:dd:1f:5b" "8c:ae:4c:dd:18:7a" "8c:ae:4c:dd:18:54" -}}
+            {{- range $net := .Values.network -}}
+              {{- if has $net.macaddress $macs -}}
+                {{- $control = true -}}
+              {{- end -}}
+              {{- if eq $net.macaddress (first $macs) -}}
+                {{- $first = true -}}
+              {{ end -}}
+            {{- end -}}
+            {{/* I use the character range of https://en.bitcoin.it/wiki/Bech32 */}}
+            {{/* so there are no lookalike characters */}}
+            {{- $id := regexReplaceAll "[^qpzry9x8gf2tvdw0s3jn54khce6mua7l]" (randAlpha 32 | lower) "" | trunc 5 -}}
+
+            {{- if $control }}
+            hostname: neuron-{{ $id }}
+            k3s:
+              enabled: true
+              args:
+            {{- if $first }}
+                - --cluster-init
+            {{- end }}
+                - --disable traefik,servicelb
+                - --flannel-backend none
+                - --disable-network-policy
+                - --service-cidr 172.23.64.0/18
+                - --write-kubeconfig-mode 0644
+                - --node-taint node-role.kubernetes.io/control-plane=effect:NoSchedule
+            {{- else }}
+            hostname: myocite-{{ $id }}
+            k3s-agent:
+              enabled: true
+              args:
+                - --node-label "node.longhorn.io/create-default-disk=true"
+            {{- end }}
+
+  boot:
+    - name: "Partition /dev/nvme0n1 if needed"
+      if: >-
+        [ $(fdisk -lo type /dev/nvme0n1 | tail -n 1) != "Linux" ]
+      commands:
+        - parted /dev/nvme0n1 --script -a optimal -- mklabel gpt mkpart longhorn ext4 0% 100%
+
+    - name: "Format /dev/nvme0n1p1 if needed"
+      if: >-
+        [ $(lsblk -no FSTYPE /dev/nvme0n1p1) != "ext4" ]
+      commands:
+        - mkfs.ext4 -F /dev/nvme0n1p1
+
+    - name: "Mount /dev/nvme0n1p1 under /var/lib/longhorn"
+      if: >-
+        [ -e /dev/nvme0n1p1 ]
+      commands:
+        # -- https://github.com/kairos-io/packages/blob/3482fed51f21a2155b60a0aa9ac91b1d839d1029/packages/static/kairos-overlay-files/files/system/oem/00_rootfs_uki.yaml#L43
+        - umount /var/lib/longhorn
+        - mount -o rw /dev/nvme0n1p1 /var/lib/longhorn
+
+    - name: "Set up various kube environment variables"
+      environment:
+        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+        CONTAINERD_ADDRESS: /run/k3s/containerd/containerd.sock
+        CONTAINERD_NAMESPACE: k8s.io
+#
+# # -- p2p is commented out because while I'd love to use it,
+# # -- I want to be weird and set different hostnames for control plane nodes
+# # -- and workers, and that requires me to template the k3s configuration
+# # -- like I do above
+# # -- See https://github.com/kairos-io/kairos/issues/1877
+# p2p:
+#   network_id: corpus
+#   network_token: [[.p2p.network_token]]
+#   dns: false
+#   # disable_dht: true
+#   auto:
+#     enable: true
+#     ha:
+#       enable: true
+#       # -- ADDITIONAL control plane nodes
+#       # master_nodes: 1
+#   vpn:
+#     create: false
+#     enable: false
+#     # env:
+#       # DNSFORWARD: "true"
+#       # DNSCACHESIZE: "200"
+#       # DNSFORWARDSERVER: "192.168.1.1:53"
