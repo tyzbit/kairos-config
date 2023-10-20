@@ -51,10 +51,10 @@ stages:
           k3s_manifest_dir=/var/lib/rancher/k3s/server/manifests
 
           url="https://api.github.com/repos/$repo/contents/$path?ref=$ref"
-          while read manifest; do
+          curl -sL "$url" | jq -r '.[] | select(.type == "file") | .name' | while read manifest; do
             source="https://raw.githubusercontent.com/$repo/$ref/$path/$manifest"
             curl -s "$source" -o "$k3s_manifest_dir/$manifest"
-          done <<< "$(curl -sL "$url" | jq -r '.[] | select(.type == "file") | .name')"
+          done
 
     - name: "Download sensitive config values"
       downloads:
