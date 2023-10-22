@@ -43,41 +43,22 @@ flux:
 
 stages:
   before-install:
-    # TODO: https://kairos.io/docs/reference/build-from-scratch/
-    - name: "Configure to use m.2 Realtek card"
-      files:
-        - path: /etc/modprobe.d/blacklist-r8169.conf
-          permissions: 0644
-          content: |
-            blacklist r8169
-        - path: /etc/apt/sources.list.d/debian-nonfree.list
-          permissions: 0644
-          content: |
-            deb http://ftp.us.debian.org/debian trixie main non-free-firmware
-
-    - name: "Install Realtek firmware"
-      commands:
-        - apt-get update
-        - apt-get install -y firmware-realtek
-        - apt-get clean && rm -rf /var/lib/apt/lists/*
-        - rmmod r8169
-        - modprobe r8125
-        - update-initramfs -u
-
-  after-install-chroot:
     - name: "Add cluster-specific manifests from GitHub"
       commands:
         - |
-          repo=tyzbit/kairos-config
-          ref=main
-          path=clusters/corpus/manifests
-          k3s_manifest_dir=/var/lib/rancher/k3s/server/manifests
+          bash <<'EOF'
+            repo=tyzbit/kairos-config
+            ref=main
+            path=clusters/corpus/manifests
+            url="https://api.github.com/repos/$repo/contents/$path?ref=$ref"
 
-          url="https://api.github.com/repos/$repo/contents/$path?ref=$ref"
-          curl -sL "$url" | jq -r '.[] | select(.type == "file") | .name' | while read manifest; do
-            source="https://raw.githubusercontent.com/$repo/$ref/$path/$manifest"
-            curl -s "$source" -o "$k3s_manifest_dir/$manifest"
-          done
+            files=$(curl -sL "$url" | jq -r '.[] | select(.type == "file") | .name')
+
+            for file in "${files[@]}"; do
+              raw_url="https://raw.githubusercontent.com/$repo/$ref/$path/$manifest"
+              curl -sL "$raw_url" -o "/var/lib/rancher/k3s/server/manifests/$file"
+            done
+          EOF
 
     - name: "Download sensitive config values"
       downloads:
@@ -87,16 +68,6 @@ stages:
       downloads:
         - url: http://nas.onair/sops_secret.yaml
           path: /var/lib/rancher/k3s/server/manifests/sops-secret.yaml
-
-    - name: "Disable onboard network"
-      files:
-        - path: /etc/systemd/network/10-disable-onboard.network
-          permissions: 0644
-          content: |
-            [Match]
-            Name=enp0*
-            [Link]
-            Unmanaged=true
 
     # -- (only `commands`,`entities` and `files` may have templating)
     - name: "Configure as control plane or worker by MAC"
