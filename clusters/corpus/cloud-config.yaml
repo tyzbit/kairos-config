@@ -4,10 +4,8 @@
 users:
   - name: tyzbit
     shell: /bin/bash
-    groups:
-      - admin
-    ssh_authorized_keys:
-      - github:tyzbit
+    groups: [admin]
+    ssh_authorized_keys: [github:tyzbit]
 
 install:
   auto: true
@@ -16,23 +14,16 @@ install:
   grub_options:
     extra_cmdline: >-
       video=1280x720
-  extra-dirs-rootfs: &longhorn
-    - /var/lib/longhorn
+  &extradirs extra-dirs-rootfs: [/var/lib/longhorn]
 
-upgrade:
-  extra-dirs-rootfs: *longhorn
-reset:
-  extra-dirs-rootfs: *longhorn
+upgrade: *extradirs
+reset: *extradirs
 
-kubevip:
-  enabled: false
-
-growpart:
-  devices: ["/"]
+kubevip: { enabled: false }
+growpart: { devices: ["/"] }
 
 bundles:
-  - targets:
-      - run://quay.io/kairos/community-bundles:flux_latest
+  - targets: [run://quay.io/kairos/community-bundles:flux_latest]
 
 flux:
   github:
@@ -60,17 +51,17 @@ stages:
             done
           EOF
 
-    - name: "Download sensitive config values"
+    - name: "Add sensitive config values"
       downloads:
         - url: http://nas.onair/sensitive_configs.yaml
           path: /oem/50_sensitive_configs.yaml
-    - name: "Download SOPS secret"
+    - name: "Add SOPS secret"
       downloads:
         - url: http://nas.onair/sops_secret.yaml
           path: /var/lib/rancher/k3s/server/manifests/sops-secret.yaml
 
     # -- (only `commands`,`entities` and `files` may have templating)
-    - name: "Configure as control plane or worker by MAC"
+    - name: "Add control plane or worker config determined by MAC address"
       files:
         - path: /oem/60_k3s_config.yaml
           content: |
@@ -125,7 +116,7 @@ stages:
       commands:
         - mkfs.ext4 -F /dev/nvme0n1p1
 
-    - name: "Mount /dev/nvme0n1p1 under /var/lib/longhorn"
+    - name: "Mount /dev/nvme0n1p1 under /var/lib/longhorn if it exists"
       if: >-
         [ -e /dev/nvme0n1p1 ]
       commands:
