@@ -101,6 +101,16 @@ stages:
                 - --node-label "node.longhorn.io/create-default-disk=true"
             {{- end }}
 
+    - name: "Disable onboard network"
+      files:
+        - path: /etc/systemd/network/10-disable-onboard.network
+          permissions: 0644
+          content: |
+            [Match]
+            Name=enp0*
+            [Link]
+            Unmanaged=true
+
   boot:
     - name: "Partition /dev/nvme0n1 if needed"
       if: >-
