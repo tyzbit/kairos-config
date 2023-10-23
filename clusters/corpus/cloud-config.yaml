@@ -35,7 +35,7 @@ flux:
     components-extra: image-reflector-controller,image-automation-controller
 
 stages:
-  after-install:
+  after-install-chroot:
     - name: "Add cluster-specific manifests from GitHub"
       commands:
         - |
