@@ -49,11 +49,11 @@ stages:
     - name: "Add cluster-specific manifests from GitHub"
       downloads:
         - url: https://raw.githubusercontent.com/tyzbit/kairos-config/main/clusters/corpus/manifests/tigera-operator.yaml
-          path: /var/lib/rancher/k3s/server/manifests/tigera-operator.yaml]
+          path: /var/lib/rancher/k3s/server/manifests/tigera-operator.yaml
         - url: https://raw.githubusercontent.com/tyzbit/kairos-config/main/clusters/corpus/manifests/calico-crds.yaml
-          path: /var/lib/rancher/k3s/server/manifests/calico-crds.yaml]
+          path: /var/lib/rancher/k3s/server/manifests/calico-crds.yaml
         - url: https://raw.githubusercontent.com/tyzbit/kairos-config/main/clusters/corpus/manifests/flux-system-namespace.yaml
-          path: /var/lib/rancher/k3s/server/manifests/flux-system-namespace.yaml]
+          path: /var/lib/rancher/k3s/server/manifests/flux-system-namespace.yaml
 
     # # Doesn't work, $manifests doesn't exist
     # # TODO: Try pulling the files from the repo and write out another cloud-config file in /oem/
