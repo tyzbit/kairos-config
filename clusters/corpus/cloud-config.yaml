@@ -82,6 +82,7 @@ stages:
             #cloud-config
             {{- $control := false -}}
             {{- $first := false -}}
+            {{/*              mastermind          gravemind           hivemind            stuntman           */}}
             {{- $macs := list "8c:ae:4c:dd:1f:5b" "8c:ae:4c:dd:18:7a" "8c:ae:4c:dd:18:54" "48:4d:7e:e7:6a:27" -}}
             {{- range $net := .Values.network -}}
               {{- if has $net.macaddress $macs -}}
