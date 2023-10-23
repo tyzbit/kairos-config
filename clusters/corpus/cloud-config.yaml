@@ -1,6 +1,6 @@
 #cloud-config
 
-# debug: true
+debug: true
 users:
   - name: tyzbit
     shell: /bin/bash
@@ -36,22 +36,6 @@ flux:
 
 stages:
   after-install-chroot:
-    - name: "Add cluster-specific manifests from GitHub"
-      commands:
-        - |
-          bash <<'EOF'
-            path=clusters/corpus/manifests
-            ref=main
-            repo=tyzbit/kairos-config
-            manifests=/var/lib/rancher/k3s/server/manifests
-            files=($(curl -sL "https://api.github.com/repos/$repo/contents/$path?ref=$ref" | jq -r '.[] | select(.type == "file") | .name'))
-            for file in "${files[@]}"; do
-              if [[ -d "$manifests" ]]; then
-                curl -L "https://raw.githubusercontent.com/$repo/$ref/$path/$file" -o "$manifests/$file"
-              fi
-            done
-          EOF
-
     - name: "Add sensitive config values"
       downloads:
         - url: http://nas.onair/sensitive_configs.yaml
@@ -140,6 +124,24 @@ stages:
         KUBECONFIG: /etc/rancher/k3s/k3s.yaml
         CONTAINERD_ADDRESS: /run/k3s/containerd/containerd.sock
         CONTAINERD_NAMESPACE: k8s.io
+
+    - name: "Add cluster-specific manifests from GitHub"
+      commands:
+        - |
+          bash <<'EOF'
+            path=clusters/corpus/manifests
+            ref=main
+            repo=tyzbit/kairos-config
+            # manifests=/var/lib/rancher/k3s/server/manifests
+            manifests=./
+            files=($(curl -sL "https://api.github.com/repos/$repo/contents/$path?ref=$ref" | jq -r '.[] | select(.type == "file") | .name'))
+            for file in "${files[@]}"; do
+              if [[ -d "$manifests" ]]; then
+                [[ ! -f "$manifests/$file" ]] && curl -L "https://raw.githubusercontent.com/$repo/$ref/$path/$file" -o "$manifests/$file"
+              fi
+            done
+          EOF
+
 #
 # # -- p2p is commented out because while I'd love to use it,
 # # -- I want to be weird and set different hostnames for control plane nodes
