@@ -45,6 +45,35 @@ stages:
         - url: http://nas.onair/sops_secret.yaml
           path: /var/lib/rancher/k3s/server/manifests/sops-secret.yaml
 
+    # These are in this repo
+    - name: "Add cluster-specific manifests from GitHub"
+      downloads:
+        - url: https://raw.githubusercontent.com/tyzbit/kairos-config/main/clusters/corpus/manifests/tigera-operator.yaml
+          path: /var/lib/rancher/k3s/server/manifests/tigera-operator.yaml]
+        - url: https://raw.githubusercontent.com/tyzbit/kairos-config/main/clusters/corpus/manifests/calico-crds.yaml
+          path: /var/lib/rancher/k3s/server/manifests/calico-crds.yaml]
+        - url: https://raw.githubusercontent.com/tyzbit/kairos-config/main/clusters/corpus/manifests/flux-system-namespace.yaml
+          path: /var/lib/rancher/k3s/server/manifests/flux-system-namespace.yaml]
+
+    # # Doesn't work, $manifests doesn't exist
+    # # TODO: Try pulling the files from the repo and write out another cloud-config file in /oem/
+    # - name: "Add cluster-specific manifests from GitHub"
+    #   commands:
+    #     - |
+    #       bash <<'EOF'
+    #         path=clusters/corpus/manifests
+    #         ref=main
+    #         repo=tyzbit/kairos-config
+    #         # manifests=/var/lib/rancher/k3s/server/manifests
+    #         manifests=./
+    #         files=($(curl -sL "https://api.github.com/repos/$repo/contents/$path?ref=$ref" | jq -r '.[] | select(.type == "file") | .name'))
+    #         for file in "${files[@]}"; do
+    #           if [[ -d "$manifests" ]]; then
+    #             [[ ! -f "$manifests/$file" ]] && curl -L "https://raw.githubusercontent.com/$repo/$ref/$path/$file" -o "$manifests/$file"
+    #           fi
+    #         done
+    #       EOF
+
     # -- (only `commands`,`entities` and `files` may have templating)
     - name: "Add control plane or worker config determined by MAC address"
       files:
@@ -124,24 +153,6 @@ stages:
         KUBECONFIG: /etc/rancher/k3s/k3s.yaml
         CONTAINERD_ADDRESS: /run/k3s/containerd/containerd.sock
         CONTAINERD_NAMESPACE: k8s.io
-
-    - name: "Add cluster-specific manifests from GitHub"
-      commands:
-        - |
-          bash <<'EOF'
-            path=clusters/corpus/manifests
-            ref=main
-            repo=tyzbit/kairos-config
-            # manifests=/var/lib/rancher/k3s/server/manifests
-            manifests=./
-            files=($(curl -sL "https://api.github.com/repos/$repo/contents/$path?ref=$ref" | jq -r '.[] | select(.type == "file") | .name'))
-            for file in "${files[@]}"; do
-              if [[ -d "$manifests" ]]; then
-                [[ ! -f "$manifests/$file" ]] && curl -L "https://raw.githubusercontent.com/$repo/$ref/$path/$file" -o "$manifests/$file"
-              fi
-            done
-          EOF
-
 #
 # # -- p2p is commented out because while I'd love to use it,
 # # -- I want to be weird and set different hostnames for control plane nodes
