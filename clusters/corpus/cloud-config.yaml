@@ -55,25 +55,6 @@ stages:
         - url: https://raw.githubusercontent.com/tyzbit/kairos-config/main/clusters/corpus/manifests/flux-system-namespace.yaml
           path: /var/lib/rancher/k3s/server/manifests/flux-system-namespace.yaml
 
-    # # Doesn't work, $manifests doesn't exist
-    # # TODO: Try pulling the files from the repo and write out another cloud-config file in /oem/
-    # - name: "Add cluster-specific manifests from GitHub"
-    #   commands:
-    #     - |
-    #       bash <<'EOF'
-    #         path=clusters/corpus/manifests
-    #         ref=main
-    #         repo=tyzbit/kairos-config
-    #         # manifests=/var/lib/rancher/k3s/server/manifests
-    #         manifests=./
-    #         files=($(curl -sL "https://api.github.com/repos/$repo/contents/$path?ref=$ref" | jq -r '.[] | select(.type == "file") | .name'))
-    #         for file in "${files[@]}"; do
-    #           if [[ -d "$manifests" ]]; then
-    #             [[ ! -f "$manifests/$file" ]] && curl -L "https://raw.githubusercontent.com/$repo/$ref/$path/$file" -o "$manifests/$file"
-    #           fi
-    #         done
-    #       EOF
-
     # -- (only `commands`,`entities` and `files` may have templating)
     - name: "Add control plane or worker config determined by MAC address"
       files:
@@ -92,8 +73,8 @@ stages:
                 {{- $first = true -}}
               {{ end -}}
             {{- end -}}
-            {{/* I use the character range of https://en.bitcoin.it/wiki/Bech32 */}}
-            {{/* so there are no lookalike characters */}}
+
+            {{/* https://en.bitcoin.it/wiki/Bech32 */}}
             {{- $id := regexReplaceAll "[^qpzry9x8gf2tvdw0s3jn54khce6mua7l]" (randAlpha 32 | lower) "" | trunc 5 -}}
 
             {{- if $control }}
@@ -109,7 +90,7 @@ stages:
                 - --disable-network-policy
                 - --service-cidr 172.23.64.0/18
                 - --write-kubeconfig-mode 0644
-                - --node-taint node-role.kubernetes.io/control-plane=effect:NoSchedule
+                # - --node-taint node-role.kubernetes.io/control-plane=effect:NoSchedule
             {{- else }}
             hostname: myocite-{{ $id }}
             k3s-agent:
@@ -154,27 +135,3 @@ stages:
         KUBECONFIG: /etc/rancher/k3s/k3s.yaml
         CONTAINERD_ADDRESS: /run/k3s/containerd/containerd.sock
         CONTAINERD_NAMESPACE: k8s.io
-#
-# # -- p2p is commented out because while I'd love to use it,
-# # -- I want to be weird and set different hostnames for control plane nodes
-# # -- and workers, and that requires me to template the k3s configuration
-# # -- like I do above
-# # -- See https://github.com/kairos-io/kairos/issues/1877
-# p2p:
-#   network_id: corpus
-#   network_token: [[.p2p.network_token]]
-#   dns: false
-#   # disable_dht: true
-#   auto:
-#     enable: true
-#     ha:
-#       enable: true
-#       # -- ADDITIONAL control plane nodes
-#       # master_nodes: 1
-#   vpn:
-#     create: false
-#     enable: false
-#     # env:
-#       # DNSFORWARD: "true"
-#       # DNSCACHESIZE: "200"
-#       # DNSFORWARDSERVER: "192.168.1.1:53"
