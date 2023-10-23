@@ -1,6 +1,6 @@
 #cloud-config
 
-debug: true
+# debug: true
 users:
   - name: tyzbit
     shell: /bin/bash
