@@ -52,7 +52,7 @@ stages:
             path=clusters/corpus/manifests
             url="https://api.github.com/repos/$repo/contents/$path?ref=$ref"
 
-            files=$(curl -sL "$url" | jq -r '.[] | select(.type == "file") | .name')
+            files=($(curl -sL "$url" | jq -r '.[] | select(.type == "file") | .name'))
 
             for file in "${files[@]}"; do
               raw_url="https://raw.githubusercontent.com/$repo/$ref/$path/$manifest"
