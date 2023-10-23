@@ -14,10 +14,12 @@ install:
   grub_options:
     extra_cmdline: >-
       video=1280x720
-  &extradirs extra-dirs-rootfs: [/var/lib/longhorn]
+  extra-dirs-rootfs: &longhorn [/var/lib/longhorn]
 
-upgrade: *extradirs
-reset: *extradirs
+upgrade:
+  extra-dirs-rootfs: *longhorn
+reset:
+  extra-dirs-rootfs: *longhorn
 
 kubevip: { enabled: false }
 growpart: { devices: ["/"] }
