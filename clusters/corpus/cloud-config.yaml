@@ -40,7 +40,8 @@ stages:
       commands:
         - |
           bash <<'EOF'
-            repo=tyzbit/kairos-config ref=main path=clusters/corpus/manifests manifests=/var/lib/rancher/k3s/server/manifests
+            path=clusters/corpus/manifests
+            repo=tyzbit/kairos-config ref=main manifests=/var/lib/rancher/k3s/server/manifests
             files=($(curl -sL "https://api.github.com/repos/$repo/contents/$path?ref=$ref" | jq -r '.[] | select(.type == "file") | .name'))
             for file in "${files[@]}"; do
               if [[ -d "$manifests " ]]; then
