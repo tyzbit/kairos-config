@@ -1,9 +1,9 @@
 state_dir: "/storage"
 # artifact_version: v2.4.0-k3sv1.26.6+k3s1
 # release_version: v2.4.0
-# artifact_version: v2.4.1-k3sv1.27.3+k3s1
-# release_version: v2.4.1
-# flavor: debian
-# repository: kairos-io/kairos
-container_image: quay.io/kairos/kairos-debian:v2.4.1-k3sv1.26.6-k3s1
+artifact_version: v2.4.1-k3sv1.27.3+k3s1
+release_version: v2.4.1
+flavor: debian
+repository: kairos-io/kairos
+# container_image: quay.io/kairos/kairos-debian:v2.4.1-k3sv1.26.6-k3s1
 # container_image: quay.io/kairos/kairos-debian:v2.4.1-k3sv1.27.3-k3s1
