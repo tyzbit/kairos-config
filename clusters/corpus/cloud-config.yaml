@@ -1,6 +1,6 @@
 #cloud-config
 
-debug: true
+# debug: true
 users:
   - name: tyzbit
     shell: /bin/bash
@@ -63,8 +63,8 @@ stages:
             #cloud-config
             {{- $control := false -}}
             {{- $first := false -}}
-            {{/*                   stuntman             doorman           mastermind          gravemind           hivemind        */}}
-            {{- $macs := list "48:4d:7e:e7:6a:27" "18:66:da:0b:93:be" "8c:ae:4c:dd:1f:5b" "8c:ae:4c:dd:18:7a" "8c:ae:4c:dd:18:54"  -}}
+            {{/*                   stuntman             crewman           mastermind          gravemind           hivemind        */}}
+            {{- $macs := list "48:4d:7e:e7:6a:27" "48:4d:7e:dd:21:6e" "8c:ae:4c:dd:1f:5b" "8c:ae:4c:dd:18:7a" "8c:ae:4c:dd:18:54"  -}}
             {{- range $net := .Values.network -}}
               {{- if has $net.macaddress $macs -}}
                 {{- $control = true -}}
