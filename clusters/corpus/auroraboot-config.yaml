@@ -1,3 +1,4 @@
+listen_addr: :8081
 state_dir: "/storage"
 # artifact_version: v2.4.0-k3sv1.26.6+k3s1
 # release_version: v2.4.0
