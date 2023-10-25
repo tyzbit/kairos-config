@@ -82,15 +82,16 @@ stages:
             k3s:
               enabled: true
               args:
-            {{- if $first }}
-                - --cluster-init
-            {{- end }}
                 - --disable traefik,servicelb
                 - --flannel-backend none
                 - --disable-network-policy
                 - --service-cidr 172.23.64.0/18
                 - --write-kubeconfig-mode 0644
                 # - --node-taint node-role.kubernetes.io/control-plane=effect:NoSchedule
+            {{- if $first }}
+                - --cluster-init
+              env: { K3S_URL: "" }
+            {{- end }}
             {{- else }}
             hostname: myocite-{{ $id }}
             k3s-agent:
