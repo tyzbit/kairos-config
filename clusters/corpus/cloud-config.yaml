@@ -90,6 +90,7 @@ stages:
                 - --disable-network-policy
                 - --service-cidr 172.23.64.0/18
                 - --write-kubeconfig-mode 0644
+                - --node-label "graphics=dri"
                 # - --node-taint node-role.kubernetes.io/control-plane=effect:NoSchedule
             {{- if $first }}
                 - --cluster-init
@@ -101,6 +102,7 @@ stages:
               enabled: true
               args:
                 - --node-label "node.longhorn.io/create-default-disk=true"
+                - --node-label "graphics=dri"
             {{- end }}
 
     - name: "Disable onboard network"
