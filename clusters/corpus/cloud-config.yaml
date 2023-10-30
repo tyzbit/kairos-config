@@ -93,8 +93,8 @@ stages:
                 - --node-label "graphics=dri"
                 # - --node-taint node-role.kubernetes.io/control-plane=effect:NoSchedule
             {{- if $first }}
-                - --cluster-init
-              env: { K3S_URL: "" }
+            #    - --cluster-init
+            #  env: { K3S_URL: "" }
             {{- end }}
             {{- else }}
             hostname: myocite-{{ $id }}
