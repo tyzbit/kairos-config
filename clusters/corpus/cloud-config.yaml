@@ -102,6 +102,7 @@ stages:
               enabled: true
               args:
                 - --node-label "node.longhorn.io/create-default-disk=true"
+                - --node-label "longhorn=primary"
                 - --node-label "graphics=dri"
             {{- end }}
 
