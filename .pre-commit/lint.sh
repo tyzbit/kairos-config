@@ -20,4 +20,4 @@ find . -name cloud-config.yaml | while read config; do
     exit 1
   fi
 done
-"""
+""" >&1

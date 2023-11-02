@@ -66,6 +66,7 @@ stages:
             #cloud-config
             {{- $control := false -}}
             {{- $first := false -}}
+            {{- $coral := false -}}
             {{/*                   stuntman             crewman             doorman           mastermind          gravemind           hivemind        */}}
             {{- $macs := list "48:4d:7e:e7:6a:27" "48:4d:7e:dd:21:6e" "18:66:da:0b:93:be" "8c:ae:4c:dd:1f:5b" "8c:ae:4c:dd:18:7a" "8c:ae:4c:dd:18:54"  -}}
             {{- range $net := .Values.network -}}
@@ -74,6 +75,9 @@ stages:
               {{- end -}}
               {{- if eq $net.macaddress (first $macs) -}}
                 {{- $first = true -}}
+              {{ end -}}
+              {{- if eq $net.macaddress "48:4d:7e:e7:6a:27" -}}
+                {{- $coral = true -}}
               {{ end -}}
             {{- end -}}
 
@@ -91,6 +95,9 @@ stages:
                 - --service-cidr 172.23.64.0/18
                 - --write-kubeconfig-mode 0644
                 - --node-label "graphics=dri"
+              {{- if $coral }}
+                - --node-label "coral=attached"
+              {{- end }}
                 # - --node-taint node-role.kubernetes.io/control-plane=effect:NoSchedule
             {{- if $first }}
             #    - --cluster-init
@@ -104,6 +111,9 @@ stages:
                 - --node-label "node.longhorn.io/create-default-disk=true"
                 - --node-label "longhorn=primary"
                 - --node-label "graphics=dri"
+              {{- if $coral }}
+                - --node-label "coral=attached"
+              {{- end }}
             {{- end }}
 
     - name: "Disable onboard network"
