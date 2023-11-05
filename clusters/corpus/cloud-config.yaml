@@ -9,17 +9,18 @@ users:
 
 install:
   auto: true
-  device: /dev/sda
+  device: auto
   reboot: true
   grub_options:
     extra_cmdline: >-
       video=1280x720
-  extra-dirs-rootfs: &longhorn [/var/lib/longhorn]
+  bind_mounts: [/var/lib/longhorn]
+#   extra-dirs-rootfs: &longhorn [/var/lib/longhorn]
 
-upgrade:
-  extra-dirs-rootfs: *longhorn
-reset:
-  extra-dirs-rootfs: *longhorn
+# upgrade:
+#   extra-dirs-rootfs: *longhorn
+# reset:
+#   extra-dirs-rootfs: *longhorn
 
 kubevip: { enabled: false }
 growpart: { devices: ["/"] }
