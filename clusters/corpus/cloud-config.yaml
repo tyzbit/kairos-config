@@ -132,7 +132,7 @@ stages:
         - path: /etc/modules-load.d/i915.conf
           permissions: 0644
           content: |
-            options i915 enable_dc=0,enable_guc=3
+            options i915 enable_dc=0 enable_guc=3
 
     - name: "Partition /dev/nvme0n1 if needed"
       if: >-
