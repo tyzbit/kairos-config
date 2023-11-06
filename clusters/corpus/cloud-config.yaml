@@ -15,12 +15,12 @@ install:
     extra_cmdline: >-
       video=1280x720
   bind_mounts: [/var/lib/longhorn]
-#   extra-dirs-rootfs: &longhorn [/var/lib/longhorn]
+  extra-dirs-rootfs: &longhorn [/var/lib/longhorn]
 
-# upgrade:
-#   extra-dirs-rootfs: *longhorn
-# reset:
-#   extra-dirs-rootfs: *longhorn
+upgrade:
+  extra-dirs-rootfs: *longhorn
+reset:
+  extra-dirs-rootfs: *longhorn
 
 kubevip: { enabled: false }
 growpart: { devices: ["/"] }
