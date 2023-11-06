@@ -127,14 +127,14 @@ stages:
             Unmanaged=true
 
   boot:
-    - name: "Add i915 module"
-      commands:
-        - modprobe i915 enable_dc=0 enable_guc=3
-      # files:
-      #   - path: /etc/modules-load.d/i915.conf
-      #     permissions: 0644
-      #     content: |
-      #       options i915 enable_dc=0 enable_guc=3
+    # - name: "Add i915 module"
+    #   commands:
+    #     - modprobe i915 enable_dc=0 enable_guc=3
+    # files:
+    #   - path: /etc/modules-load.d/i915.conf
+    #     permissions: 0644
+    #     content: |
+    #       options i915 enable_dc=0 enable_guc=3
 
     - name: "Partition /dev/nvme0n1 if needed"
       if: >-
