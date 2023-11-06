@@ -14,7 +14,6 @@ install:
   grub_options:
     extra_cmdline: >-
       video=1280x720
-  bind_mounts: [/var/lib/longhorn]
   extra-dirs-rootfs: &longhorn [/var/lib/longhorn]
 
 upgrade:
@@ -140,9 +139,9 @@ stages:
       commands:
         - mkfs.ext4 -F /dev/nvme0n1p1
 
-    - name: "Mount /dev/nvme0n1p1 under /var/lib/longhorn if it exists"
+    - name: "Mount /dev/nvme0n1p1 under /var/lib/longhorn if it exists (if NVMe is not primary storage)"
       if: >-
-        [ -e /dev/nvme0n1p1 ]
+        [ -e /dev/nvme0n1p1 ] && [ -e /dev/sda ]
       commands:
         # -- https://github.com/kairos-io/packages/blob/3482fed51f21a2155b60a0aa9ac91b1d839d1029/packages/static/kairos-overlay-files/files/system/oem/00_rootfs_uki.yaml#L43
         - umount /var/lib/longhorn
