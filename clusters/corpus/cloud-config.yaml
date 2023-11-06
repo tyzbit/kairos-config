@@ -127,6 +127,13 @@ stages:
             Unmanaged=true
 
   boot:
+    - name: "Add i915 module"
+      files:
+        - path: /etc/modules-load.d/i915.conf
+          permissions: 0644
+          content: |
+            i915
+
     - name: "Partition /dev/nvme0n1 if needed"
       if: >-
         [ $(fdisk -lo type /dev/nvme0n1 | tail -n 1) != "Linux" ]
