@@ -133,10 +133,10 @@ stages:
                 - --service-cidr 172.23.64.0/18
                 - --write-kubeconfig-mode 0644
                 - --node-label "graphics=dri"
+                - --node-taint node-role.kubernetes.io/control-plane=effect:PreferNoSchedule
               {{- if $coral }}
                 - --node-label "coral=attached"
               {{- end }}
-                # - --node-taint node-role.kubernetes.io/control-plane=effect:NoSchedule
             {{- if $first }}
             #    - --cluster-init
             #  env: { K3S_URL: "" }
