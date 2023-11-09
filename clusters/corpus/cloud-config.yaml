@@ -106,8 +106,7 @@ stages:
             {{- $control := false -}}
             {{- $first := false -}}
             {{- $coral := false -}}
-            {{/*                   stuntman             crewman             doorman           mastermind          gravemind           hivemind        */}}
-            {{- $macs := list "48:4d:7e:e7:6a:27" "48:4d:7e:dd:21:6e" "18:66:da:0b:93:be" "8c:ae:4c:dd:1f:5b" "8c:ae:4c:dd:18:7a" "8c:ae:4c:dd:18:54"  -}}
+            {{- $macs := list "48:4d:7e:e7:6a:27" "18:66:da:0b:93:be" "48:4d:7e:dd:21:6e" -}}
             {{- range $net := .Values.network -}}
               {{- if has $net.macaddress $macs -}}
                 {{- $control = true -}}
@@ -115,7 +114,7 @@ stages:
               {{- if eq $net.macaddress (first $macs) -}}
                 {{- $first = true -}}
               {{ end -}}
-              {{- if eq $net.macaddress "48:4d:7e:e7:6a:27" -}}
+              {{- if eq $net.macaddress "6c:3c:8c:4f:07:49" -}}
                 {{- $coral = true -}}
               {{ end -}}
             {{- end -}}
@@ -135,9 +134,6 @@ stages:
                 - --write-kubeconfig-mode 0644
                 - --node-label "graphics=dri"
                 - --node-taint node-role.kubernetes.io/control-plane=effect:PreferNoSchedule
-              {{- if $coral }}
-                - --node-label "coral=attached"
-              {{- end }}
             {{- if $first }}
             #    - --cluster-init
             #  env: { K3S_URL: "" }
@@ -150,9 +146,9 @@ stages:
                 - --node-label "node.longhorn.io/create-default-disk=true"
                 - --node-label "longhorn=primary"
                 - --node-label "graphics=dri"
-              {{- if $coral }}
+            {{- end }}
+            {{- if $coral }}
                 - --node-label "coral=attached"
-              {{- end }}
             {{- end }}
 
     - name: "Disable onboard network"
