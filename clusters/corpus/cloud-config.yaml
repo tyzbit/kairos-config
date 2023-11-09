@@ -142,7 +142,7 @@ stages:
             #  env: { K3S_URL: "" }
             {{- end }}
             {{- else }}
-            hostname: myocite-{{ $id }}
+            hostname: myocyte-{{ $id }}
             k3s-agent:
               enabled: true
               args:
