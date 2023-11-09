@@ -14,6 +14,7 @@ install:
   reboot: true
   grub_options:
     extra_cmdline: >-
+      pcie_aspm=off
       video=1280x720
   extra-dirs-rootfs: &longhorn [/var/lib/longhorn]
 
