@@ -147,7 +147,7 @@ stages:
             {{- end -}}
 
             {{/* https://en.bitcoin.it/wiki/Bech32 */}}
-            {{- $id := regexReplaceAll 
+            {{- $random_suffix := regexReplaceAll 
                          "[^qpzry9x8gf2tvdw0s3jn54khce6mua7l]" 
                          (randAlpha 32 | lower) "" | trunc 5 -}}
 
@@ -157,7 +157,7 @@ stages:
             # Bootstrap node: {{ $bootstrap_node }}
             # Coral: {{ $coral_attached }}
 
-            hostname: {{ $hostname }}-{{ $id }}
+            hostname: {{ $hostname }}-{{ $random_suffix }}
             {{- if $control }}
             k3s:
               enabled: true
