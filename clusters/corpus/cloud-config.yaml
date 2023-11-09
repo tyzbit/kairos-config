@@ -103,27 +103,62 @@ stages:
         - path: /oem/60_k3s_config.yaml
           content: |
             #cloud-config
-            {{- $control := false -}}
-            {{- $first := false -}}
-            {{- $coral := false -}}
-            {{- $macs := list "48:4d:7e:e7:6a:27" "18:66:da:0b:93:be" "48:4d:7e:dd:21:6e" -}}
+            {{- $control_label := "neuron" -}}
+            {{- $worker_label := "myocyte" -}}
+            {{- $coral := "6c:3c:8c:4f:07:49" -}}
+            {{- $controllers := list 
+              "48:4d:7e:e7:6a:27"
+              "18:66:da:0b:93:be"
+              "48:4d:7e:dd:21:6e"
+            -}}
+            {{- $workers := list
+              "66:67:ec:d5:26:0e"
+              "66:a5:fc:fb:67:0a"
+              "18:66:da:29:1d:32"
+              "6c:3c:8c:4f:07:49"
+            -}}
+            {{- $hostname := "unknown" -}}
+            {{- $coral_attached := false -}}
+            {{- $count := 1 -}}
             {{- range $net := .Values.network -}}
-              {{- if has $net.macaddress $macs -}}
-                {{- $control = true -}}
+
+              {{- if has $net.macaddress $controllers -}}
+                {{- range $mac := $controllers -}}
+                  {{- if eq $net.macaddress $mac -}}
+                    {{- $hostname = cat $control_label $count | nospace -}}
+                  {{- end -}}
+                  {{- $count = add $count 1 -}}
+                {{- end -}}
               {{- end -}}
-              {{- if eq $net.macaddress (first $macs) -}}
-                {{- $first = true -}}
+
+              {{- if has $net.macaddress $workers -}}
+                {{- range $mac := $workers -}}
+                  {{- if eq $net.macaddress $mac -}}
+                    {{- $hostname = cat $worker_label $count | nospace -}}
+                  {{- end -}}
+                  {{- $count = add $count 1 -}}
+                {{- end -}}
+              {{- end -}}
+
+              {{- if eq $net.macaddress $coral -}}
+                {{- $coral_attached = true -}}
               {{ end -}}
-              {{- if eq $net.macaddress "6c:3c:8c:4f:07:49" -}}
-                {{- $coral = true -}}
-              {{ end -}}
+
             {{- end -}}
 
             {{/* https://en.bitcoin.it/wiki/Bech32 */}}
-            {{- $id := regexReplaceAll "[^qpzry9x8gf2tvdw0s3jn54khce6mua7l]" (randAlpha 32 | lower) "" | trunc 5 -}}
+            {{- $id := regexReplaceAll 
+                         "[^qpzry9x8gf2tvdw0s3jn54khce6mua7l]" 
+                         (randAlpha 32 | lower) "" | trunc 5 -}}
 
+            {{- $bootstrap_node := eq $hostname (cat $control_label "1" | nospace) -}}
+            {{- $control := hasPrefix $control_label $hostname -}}
+            # Control: {{ $control }}
+            # Bootstrap node: {{ $bootstrap_node }}
+            # Coral: {{ $coral_attached }}
+
+            hostname: {{ $hostname }}-{{ $id }}
             {{- if $control }}
-            hostname: neuron-{{ $id }}
             k3s:
               enabled: true
               args:
@@ -134,12 +169,7 @@ stages:
                 - --write-kubeconfig-mode 0644
                 - --node-label "graphics=dri"
                 - --node-taint node-role.kubernetes.io/control-plane=effect:PreferNoSchedule
-            {{- if $first }}
-            #    - --cluster-init
-            #  env: { K3S_URL: "" }
-            {{- end }}
             {{- else }}
-            hostname: myocyte-{{ $id }}
             k3s-agent:
               enabled: true
               args:
@@ -147,7 +177,12 @@ stages:
                 - --node-label "longhorn=primary"
                 - --node-label "graphics=dri"
             {{- end }}
-            {{- if $coral }}
+            {{- if $bootstrap_node }}
+              # # Disabled because the cluster is already running. Uncomment to start a new cluster.
+              #   - --cluster-init
+              # env: { K3S_URL: "" }
+            {{- end }}
+            {{- if $coral_attached }}
                 - --node-label "coral=attached"
             {{- end }}
 
