@@ -106,17 +106,8 @@ stages:
             {{- $control_label := "neuron" -}}
             {{- $worker_label := "myocyte" -}}
             {{- $coral := "6c:3c:8c:4f:07:49" -}}
-            {{- $controllers := list 
-              "48:4d:7e:e7:6a:27"
-              "18:66:da:0b:93:be"
-              "48:4d:7e:dd:21:6e"
-            -}}
-            {{- $workers := list
-              "66:67:ec:d5:26:0e"
-              "66:a5:fc:fb:67:0a"
-              "18:66:da:29:1d:32"
-              "6c:3c:8c:4f:07:49"
-            -}}
+            {{- $controllers := list "48:4d:7e:e7:6a:27" "18:66:da:0b:93:be" "48:4d:7e:dd:21:6e" -}}
+            {{- $workers := list "66:67:ec:d5:26:0e" "66:a5:fc:fb:67:0a" "18:66:da:29:1d:32" "6c:3c:8c:4f:07:49" -}}
             {{- $hostname := "unknown" -}}
             {{- $coral_attached := false -}}
             {{- $count := 1 -}}
@@ -147,9 +138,7 @@ stages:
             {{- end -}}
 
             {{/* https://en.bitcoin.it/wiki/Bech32 */}}
-            {{- $random_suffix := regexReplaceAll 
-                         "[^qpzry9x8gf2tvdw0s3jn54khce6mua7l]" 
-                         (randAlpha 32 | lower) "" | trunc 5 -}}
+            {{- $random_suffix := regexReplaceAll "[^qpzry9x8gf2tvdw0s3jn54khce6mua7l]" (randAlpha 32 | lower) "" | trunc 5 -}}
 
             {{- $bootstrap_node := eq $hostname (cat $control_label "1" | nospace) -}}
             {{- $control := hasPrefix $control_label $hostname -}}
