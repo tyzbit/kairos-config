@@ -176,7 +176,7 @@ stages:
                 - --node-label "coral=attached"
             {{- end }}
 
-    - name: "Disable onboard network"
+    - name: "Disable onboard network if an add-on card is present"
       if: ip link show enp3s0 &>/dev/null
       files:
         - path: /etc/systemd/network/10-disable-onboard.network
