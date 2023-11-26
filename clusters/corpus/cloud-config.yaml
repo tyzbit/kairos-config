@@ -107,7 +107,7 @@ stages:
             {{- $worker_label := "myocyte" -}}
             {{- $coral := "6c:3c:8c:4f:07:49" -}}
             {{- $controllers := list "48:4d:7e:e7:6a:27" "18:66:da:0b:93:be" "48:4d:7e:dd:21:6e" -}}
-            {{- $workers := list "64:00:6a:85:0d:41" "18:66:da:22:55:72" "18:66:da:29:1d:32" "6c:3c:8c:4f:07:49" -}}
+            {{- $workers := list "64:00:6a:85:0d:41" "18:66:da:22:55:72" "18:66:da:29:1d:32" "6c:3c:8c:4f:07:49" "6c:3c:8c:4f:6e:ff" "6c:3c:8c:54:fa:43" -}}
             {{- $hostname := "unknown" -}}
             {{- $coral_attached := false -}}
             {{- $count := 1 -}}
@@ -177,6 +177,7 @@ stages:
             {{- end }}
 
     - name: "Disable onboard network"
+      if: ip link show enp3s0 &>/dev/null
       files:
         - path: /etc/systemd/network/10-disable-onboard.network
           permissions: 0644
