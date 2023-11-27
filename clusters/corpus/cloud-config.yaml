@@ -177,7 +177,7 @@ stages:
             {{- end }}
 
     - name: "Disable onboard network if an add-on card is present"
-      if: ip link show enp3s0 &>/dev/null
+      if: lspci | grep Ethernet | grep -qv Intel
       files:
         - path: /etc/systemd/network/10-disable-onboard.network
           permissions: 0644
