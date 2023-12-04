@@ -189,16 +189,14 @@ stages:
             [Link]
             Unmanaged=true
 
-  boot:
-    # - name: "Add i915 module"
-    #   commands:
-    #     - modprobe i915 enable_dc=0 enable_guc=3
-    # files:
-    #   - path: /etc/modules-load.d/i915.conf
-    #     permissions: 0644
-    #     content: |
-    #       options i915 enable_dc=0 enable_guc=3
+  # https://github.com/derailed/k9s/issues/1399
+  initramfs:
+    - name: Increase number of open files
+      sysctl:
+        fs.inotify.max_user_instances: "8192"
+        fs.inotify.max_user_watches: "524288"
 
+  boot:
     - name: "Partition /dev/nvme0n1 if needed"
       if: >-
         [ $(fdisk -lo type /dev/nvme0n1 | tail -n 1) != "Linux" ]
