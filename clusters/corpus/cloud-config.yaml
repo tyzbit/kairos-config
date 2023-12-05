@@ -17,7 +17,7 @@ install:
   grub_options:
     extra_cmdline: >-
       pcie_aspm=off
-      video=1280x720
+      gfxmode=800x600x32
   extra-dirs-rootfs: &longhorn [/var/lib/longhorn]
 
 upgrade:
