@@ -48,7 +48,7 @@ stages:
       name: "Conditionally partition sda"
       commands:
         - |
-          parted --script --machine -- /dev/sda mklabel gpt
+          parted --script --machine -- /dev/sda mklabel msdos
       layout: &layout
         device:
           path: /dev/sda
@@ -73,7 +73,7 @@ stages:
       name: "Conditionally partition nvme0n1"
       commands:
         - |
-          parted --script --machine -- /dev/nvme0n1 mklabel gpt
+          parted --script --machine -- /dev/nvme0n1 mklabel msdos
       layout:
         <<: *layout
         device:
