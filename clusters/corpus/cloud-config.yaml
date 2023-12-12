@@ -19,6 +19,7 @@ install:
   grub_options:
     extra_cmdline: >-
       pcie_aspm=off
+      gfxpayload=800x600x32
       gfxmode=800x600x32
   extra-dirs-rootfs: &longhorn [/var/lib/longhorn]
 
@@ -28,7 +29,8 @@ reset:
   extra-dirs-rootfs: *longhorn
 
 kubevip: { enabled: false }
-growpart: { devices: ["/"] }
+# -- Not needed because of expand_partition in step "Conditionally partition sda"
+# growpart: { devices: ["/"] }
 
 bundles:
   - targets: [run://quay.io/kairos/community-bundles:flux_latest]
@@ -207,21 +209,26 @@ stages:
         fs.inotify.max_user_watches: "524288"
 
   boot:
-    - name: "Partition /dev/nvme0n1 if needed"
+    - name: "Format /dev/nvme0n1 if unformatted and Kairos is installed to /dev/sdX"
+      # -- Double brackets needed for regex compare
       if: >-
-        [ $(fdisk -lo type /dev/nvme0n1 | tail -n 1) != "Linux" ]
+        [[ $(lsblk -o NAME,LABEL | grep OEM) =~ "-sd" ]] &&
+        [[ ! $(fdisk -lo type /dev/nvme0n1 | tail -n 1) =~ "Linux" ]]
       commands:
         - parted /dev/nvme0n1 --script -a optimal -- mklabel gpt mkpart longhorn ext4 0% 100%
+        - &partition mkfs.ext4 -F /dev/nvme0n1p1
 
-    - name: "Format /dev/nvme0n1p1 if needed"
+    - name: "Partition /dev/nvme0n1p1 if unpartitioned and Kairos is installed to /dev/sdX"
       if: >-
-        [ $(lsblk -no FSTYPE /dev/nvme0n1p1) != "ext4" ]
+        [[ $(lsblk -o NAME,LABEL | grep OEM) =~ "-sd" ]] &&
+        [[ $(lsblk -no FSTYPE /dev/nvme0n1p1) != "ext4" ]]
       commands:
-        - mkfs.ext4 -F /dev/nvme0n1p1
+        - *partition
 
-    - name: "Mount /dev/nvme0n1p1 under /var/lib/longhorn if it exists (if NVMe is not primary storage)"
+    - name: "Mount /dev/nvme0n1p1 under /var/lib/longhorn if it exists and Kairos is installed to /dev/sdX"
       if: >-
-        [ -e /dev/nvme0n1p1 ] && [ -e /dev/sda ]
+        [[ $(lsblk -o NAME,LABEL | grep OEM) =~ "-sd" ]] &&
+        [[ $(lsblk -no FSTYPE /dev/nvme0n1p1) == "ext4" ]]
       commands:
         # -- https://github.com/kairos-io/packages/blob/3482fed51f21a2155b60a0aa9ac91b1d839d1029/packages/static/kairos-overlay-files/files/system/oem/00_rootfs_uki.yaml#L43
         - umount /var/lib/longhorn
