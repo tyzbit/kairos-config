@@ -44,6 +44,7 @@ flux:
     repository: fleet-infra
     path: clusters/corpus
     components-extra: image-reflector-controller,image-automation-controller
+    network-policy: "false"
 
 stages:
   # If a node has /dev/sda, use that. Otherwise use /dev/nvme0n1
