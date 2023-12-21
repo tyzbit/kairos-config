@@ -1,8 +1,6 @@
 #cloud-config
 
 # yaml-language-server: $schema=../../schema.json
-
-# debug: true
 users:
   - name: tyzbit
     shell: /bin/bash
