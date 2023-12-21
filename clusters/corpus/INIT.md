@@ -6,12 +6,11 @@ Run an AuroraBoot container in the same network as the boxes with these argument
 
 `--cloud-config https://raw.githubusercontent.com/tyzbit/kairos-config/main/clusters/corpus/cloud-config.yaml https://raw.githubusercontent.com/tyzbit/kairos-config/main/clusters/corpus/auroraboot-config.yaml`
 
-### Installs
+### How to Install
 
-- Boot machines on the network.
-  - With the 7040s, this means using the onboard LAN.
-- Let it install
-  - It will try to reboot but fail.
-  - Power cycle the machine, wait 15 seconds and then power cycle it again.
+- Boot the machine on the same network as AuroraBoot
 
-The cluster should come up and bootstrap with Flux and start deploying everything
+It will disable the first/onboard LAN card if there is a second one installed,
+but from my experience, add-on LAN cards don't typically netboot so you'll need
+the onboard card connected for the first netboot, but you can disconnect it when
+it reboots.
