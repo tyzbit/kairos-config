@@ -9,7 +9,7 @@ spec:
     bgp: Enabled
     hostPorts: Enabled
     ipPools:
-      - blockSize: 24
+      - blockSize: 23
         cidr: 172.23.0.0/18
         encapsulation: IPIP
         natOutgoing: Enabled
