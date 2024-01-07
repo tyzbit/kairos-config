@@ -165,6 +165,7 @@ stages:
                 - --disable traefik,servicelb
                 - --flannel-backend none
                 - --disable-network-policy
+                - --cluster-cidr=172.23.0.0/18
                 - --service-cidr 172.23.64.0/18
                 - --write-kubeconfig-mode 0644
                 - --node-label "graphics=dri"
