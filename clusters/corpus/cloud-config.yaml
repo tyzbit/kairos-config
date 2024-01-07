@@ -98,6 +98,8 @@ stages:
           path: /var/lib/rancher/k3s/server/manifests/calico-crds.yaml
         - url: https://raw.githubusercontent.com/tyzbit/kairos-config/main/clusters/corpus/manifests/flux-system-namespace.yaml
           path: /var/lib/rancher/k3s/server/manifests/flux-system-namespace.yaml
+        - url: https://raw.githubusercontent.com/tyzbit/kairos-config/main/clusters/corpus/manifests/kubelet-config.yaml
+          path: /etc/rancher/k3s/kubelet-config.yaml
 
     # -- (only `commands`,`entities` and `files` may have templating)
     - name: "Add control plane or worker config determined by MAC address"
@@ -176,6 +178,7 @@ stages:
               {{- end }}
                 - --node-label "longhorn=primary"
                 - --node-label "graphics=dri"
+                - --kubelet-arg=config=/etc/rancher/k3s/kubelet-config.yaml
             {{- end }}
             {{- if $bootstrap_node }}
               # # Disabled because the cluster is already running. Uncomment to start a new cluster.
