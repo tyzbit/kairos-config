@@ -59,8 +59,12 @@ stages:
           - fsLabel: COS_OEM
             size: 64
             pLabel: oem
+          # -- https://github.com/kairos-io/kairos/issues/1265#issuecomment-1621433780
+          - fsLabel: COS_ACTIVE
+            size: &os-size 8500
+            pLabel: system
           - fsLabel: COS_RECOVERY
-            size: 8500
+            size: *os-size
             pLabel: recovery
           - fsLabel: COS_STATE
             size: 18000
@@ -200,14 +204,6 @@ stages:
             Name=enp0*
             [Link]
             Unmanaged=true
-
-    - name: "Install dbus-broker and enable it"
-      commands:
-        - apt-get update
-        - apt install -y dbus-broker=33-*
-        - systemctl enable dbus-broker.service
-        - apt-get clean
-        - rm -rf /var/lib/apt/lists/*
 
   # -- https://github.com/derailed/k9s/issues/1399
   initramfs:
