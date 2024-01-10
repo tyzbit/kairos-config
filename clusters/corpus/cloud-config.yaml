@@ -201,6 +201,14 @@ stages:
             [Link]
             Unmanaged=true
 
+    - name: "Install dbus-broker and enable it"
+      commands:
+        - apt-get update
+        - apt install -y dbus-broker=33-*
+        - systemctl enable dbus-broker.service
+        - apt-get clean
+        - rm -rf /var/lib/apt/lists/*
+
   # -- https://github.com/derailed/k9s/issues/1399
   initramfs:
     - name: Increase number of open files
