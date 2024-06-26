@@ -186,8 +186,8 @@ stages:
               args:
               {{- if not $disable_longhorn }}
                 - --node-label "node.longhorn.io/create-default-disk=true"
-              {{- end }}
                 - --node-label "longhorn=primary"
+              {{- end }}
                 - --node-label "graphics=dri"
                 - --kubelet-arg=config=/etc/rancher/k3s/kubelet-config.yaml
             {{- end }}
