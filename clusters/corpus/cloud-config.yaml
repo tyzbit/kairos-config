@@ -94,6 +94,12 @@ stages:
         - url: http://nas.onair/sops_secret.yaml
           path: /var/lib/rancher/k3s/server/manifests/sops-secret.yaml
 
+    - name: "Install extra packages - TEMPORARY"
+      commands:
+        - apt-get update
+        - apt-get install fancontrol
+        - apt-get clean && rm -rf /var/lib/apt/lists/*
+
     # -- These are in this repo
     - name: "Add cluster-specific manifests from GitHub"
       downloads:
