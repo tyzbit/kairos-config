@@ -116,11 +116,9 @@ stages:
             {{- $worker_label := "myocyte" -}}
             {{- $coral := "6c:3c:8c:54:fe:37" -}}
             {{- $controllers := list "48:4d:7e:e7:6a:27" "18:66:da:0b:93:be" "48:4d:7e:dd:21:6e" -}}
-            {{- $workers := list "6c:3c:8c:4f:6e:ff" "6c:3c:8c:54:fa:43" "00:01:2e:aa:bb:be" "6c:3c:8c:54:fe:37" "66:67:ec:d5:26:0e" "18:66:da:22:55:72" "18:66:da:29:1d:32" -}}
-            {{- $old_nodes := list "66:67:ec:d5:26:0e" "18:66:da:22:55:72" "18:66:da:29:1d:32" -}}
+            {{- $workers := list "6c:3c:8c:4f:6e:ff" "6c:3c:8c:54:fa:43" "00:01:2e:aa:bb:be" "6c:3c:8c:54:fe:37" -}}
             {{- $hostname := "unknown" -}}
             {{- $coral_attached := false -}}
-            {{- $old := false -}}
             {{- $count := 1 -}}
             {{- range $net := .Values.network -}}
 
@@ -140,10 +138,6 @@ stages:
                   {{- end -}}
                   {{- $count = add $count 1 -}}
                 {{- end -}}
-              {{- end -}}
-
-              {{- if has $net.macaddress $old_nodes -}}
-                {{- $old = true -}}
               {{- end -}}
 
               {{- if eq $net.macaddress $coral -}}
@@ -179,9 +173,6 @@ stages:
             k3s-agent:
               enabled: true
               args:
-              {{- if not $old }}
-                - --node-label "node.longhorn.io/create-default-disk=true"
-              {{- end }}
                 - --node-label "longhorn=primary"
                 - --node-label "graphics=dri"
                 - --kubelet-arg=config=/etc/rancher/k3s/kubelet-config.yaml
