@@ -115,8 +115,8 @@ stages:
             {{- $control_label := "neuron" -}}
             {{- $worker_label := "myocyte" -}}
             {{- $coral := "6c:3c:8c:54:fe:37" -}}
-            {{- $controllers := list "48:4d:7e:e7:6a:27" "18:66:da:0b:93:be" "48:4d:7e:dd:21:6e" -}}
-            {{- $workers := list "6c:3c:8c:4f:6e:ff" "6c:3c:8c:54:fa:43" "00:01:2e:aa:bb:be" "6c:3c:8c:54:fe:37" -}}
+            {{- $controllers := list "48:4d:7e:e7:6a:27" "18:66:da:0b:93:be" "48:4d:7e:dd:21:6e" "00:01:2e:aa:bb:be" -}}
+            {{- $workers := list "6c:3c:8c:4f:6e:ff" "6c:3c:8c:54:fa:43" "this space left intentionally blank" "6c:3c:8c:54:fe:37" -}}
             {{- $no_longhorn := list "00:01:2e:aa:bb:be" -}}
             {{- $hostname := "unknown" -}}
             {{- $coral_attached := false -}}
