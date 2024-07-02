@@ -9,18 +9,10 @@ users:
 
 install:
   auto: true
-  no-format: true
   reboot: true
-  grub_options:
-    extra_cmdline: >-
-      pcie_aspm=off
-      nvme_core.default_ps_max_latency_us=0
-      gfxpayload=800x600x32
-      gfxmode=800x600x32
 
 kubevip: { enabled: false }
-# -- Not needed because of expand_partition in step "Conditionally partition sda"
-# growpart: { devices: ["/"] }
+growpart: { devices: ["/"] }
 
 bundles:
   - targets: [run://quay.io/kairos/community-bundles:flux_latest]
@@ -37,38 +29,6 @@ flux:
     network-policy: "false"
 
 stages:
-  # -- If a node has /dev/sda, use that. Otherwise use /dev/nvme0n1
-  kairos-install.pre.before:
-    - if: "[ -e /dev/sda ]"
-      name: "Conditionally partition sda"
-      commands:
-        - |
-          parted --script --machine -- /dev/sda mklabel gpt
-      layout: &layout
-        device:
-          path: /dev/sda
-        expand_partition:
-          size: 0 # All available space
-        add_partitions:
-          # -- All sizes bellow are in MB
-          - fsLabel: COS_OEM
-            size: 64
-            pLabel: oem
-          # -- https://github.com/kairos-io/kairos/issues/1265#issuecomment-1621433780
-          - fsLabel: COS_ACTIVE
-            size: &os-size 8500
-            pLabel: system
-          - fsLabel: COS_RECOVERY
-            size: *os-size
-            pLabel: recovery
-          - fsLabel: COS_STATE
-            size: 18000
-            pLabel: state
-          - fsLabel: COS_PERSISTENT
-            pLabel: persistent
-            size: 25000
-            filesystem: "ext4"
-
   after-install-chroot:
     - name: "Add sensitive config values"
       downloads:
