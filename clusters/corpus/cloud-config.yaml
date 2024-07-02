@@ -111,7 +111,7 @@ stages:
       files:
         - path: /oem/60_k3s_config.yaml
           content: |
-            #cloud-config
+            #cloud-config{{"\n"}}
             {{- $control_label := "neuron" -}}
             {{- $worker_label := "myocyte" -}}
             {{- $coral := "6c:3c:8c:54:fe:37" -}}
@@ -156,7 +156,7 @@ stages:
             {{- $random_suffix := regexReplaceAll "[^qpzry9x8gf2tvdw0s3jn54khce6mua7l]" (randAlpha 32 | lower) "" | trunc 5 -}}
 
             {{- $bootstrap_node := eq $hostname (cat $control_label "1" | nospace) -}}
-            {{- $control := hasPrefix $control_label $hostname }}
+            {{- $control := hasPrefix $control_label $hostname -}}
 
             # Control: {{ $control }}
             # Bootstrap node: {{ $bootstrap_node }}
