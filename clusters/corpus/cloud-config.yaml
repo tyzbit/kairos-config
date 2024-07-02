@@ -87,11 +87,11 @@ stages:
   after-install-chroot:
     - name: "Add sensitive config values"
       downloads:
-        - url: http://nas.onair/sensitive_configs.yaml
+        - url: http://nas.onair/corpus_sensitive_configs.yaml
           path: /oem/50_sensitive_configs.yaml
     - name: "Add SOPS secret"
       downloads:
-        - url: http://nas.onair/sops_secret.yaml
+        - url: http://nas.onair/corpus_sops_secret.yaml
           path: /var/lib/rancher/k3s/server/manifests/sops-secret.yaml
 
     # -- These are in this repo
