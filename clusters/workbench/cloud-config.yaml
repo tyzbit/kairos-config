@@ -24,7 +24,7 @@ flux:
   github:
     owner: tyzbit
     repository: fleet-infra
-    path: clusters/workbench
+    path: clusters/workbench/flux
     components-extra: image-reflector-controller,image-automation-controller
     network-policy: "false"
 
