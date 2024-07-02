@@ -1,0 +1,5 @@
+listen_addr: :8081
+state_dir: "/storage"
+disable_http_server: true
+disable_netboot: true
+container_image: ghcr.io/tyzbit/kairos-distros:debian-v3.0.14-k3sv1.29.3-k3s1-60

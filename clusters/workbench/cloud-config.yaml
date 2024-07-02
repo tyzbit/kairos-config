@@ -1,0 +1,144 @@
+#cloud-config
+
+# yaml-language-server: $schema=../../schema.json
+users:
+  - name: tyzbit
+    shell: /bin/bash
+    groups: [admin]
+    ssh_authorized_keys: [github:tyzbit]
+
+install:
+  auto: true
+  no-format: true
+  reboot: true
+  grub_options:
+    extra_cmdline: >-
+      pcie_aspm=off
+      nvme_core.default_ps_max_latency_us=0
+      gfxpayload=800x600x32
+      gfxmode=800x600x32
+
+kubevip: { enabled: false }
+# -- Not needed because of expand_partition in step "Conditionally partition sda"
+# growpart: { devices: ["/"] }
+
+bundles:
+  - targets: [run://quay.io/kairos/community-bundles:flux_latest]
+
+flux:
+  # -- The actual value is in http://nas.onair/workbench_sensitive_configs.yaml
+  # env:
+  #   GITHUB_TOKEN: secretstuff
+  github:
+    owner: tyzbit
+    repository: fleet-infra
+    path: clusters/workbench
+    components-extra: image-reflector-controller,image-automation-controller
+    network-policy: "false"
+
+stages:
+  # -- If a node has /dev/sda, use that. Otherwise use /dev/nvme0n1
+  kairos-install.pre.before:
+    - if: "[ -e /dev/sda ]"
+      name: "Conditionally partition sda"
+      commands:
+        - |
+          parted --script --machine -- /dev/sda mklabel gpt
+      layout: &layout
+        device:
+          path: /dev/sda
+        expand_partition:
+          size: 0 # All available space
+        add_partitions:
+          # -- All sizes bellow are in MB
+          - fsLabel: COS_OEM
+            size: 64
+            pLabel: oem
+          # -- https://github.com/kairos-io/kairos/issues/1265#issuecomment-1621433780
+          - fsLabel: COS_ACTIVE
+            size: &os-size 8500
+            pLabel: system
+          - fsLabel: COS_RECOVERY
+            size: *os-size
+            pLabel: recovery
+          - fsLabel: COS_STATE
+            size: 18000
+            pLabel: state
+          - fsLabel: COS_PERSISTENT
+            pLabel: persistent
+            size: 25000
+            filesystem: "ext4"
+
+  after-install-chroot:
+    - name: "Add sensitive config values"
+      downloads:
+        - url: http://nas.onair/workbench_sensitive_configs.yaml
+          path: /oem/50_sensitive_configs.yaml
+    - name: "Add SOPS secret"
+      downloads:
+        - url: http://nas.onair/workbench_sops_secret.yaml
+          path: /var/lib/rancher/k3s/server/manifests/sops-secret.yaml
+
+    # -- These are in this repo
+    - name: "Add cluster-specific manifests from GitHub"
+      downloads:
+        - url: https://raw.githubusercontent.com/tyzbit/kairos-config/main/clusters/workbench/manifests/tigera-operator.yaml
+          path: /var/lib/rancher/k3s/server/manifests/tigera-operator.yaml
+        - url: https://raw.githubusercontent.com/tyzbit/kairos-config/main/clusters/workbench/manifests/calico-crds.yaml
+          path: /var/lib/rancher/k3s/server/manifests/calico-crds.yaml
+        - url: https://raw.githubusercontent.com/tyzbit/kairos-config/main/clusters/workbench/manifests/flux-system-namespace.yaml
+          path: /var/lib/rancher/k3s/server/manifests/flux-system-namespace.yaml
+        - url: https://raw.githubusercontent.com/tyzbit/kairos-config/main/clusters/workbench/manifests/kubelet-config.yaml
+          path: /etc/rancher/k3s/kubelet-config.yaml
+
+    # -- (only `commands`,`entities` and `files` may have templating)
+    - name: "Add control plane or worker config determined by MAC address"
+      files:
+        - path: /oem/60_k3s_config.yaml
+          content: |
+            #cloud-config
+            {{- $control_label := "gadget" -}}
+            {{- $controllers := list "00:01:2e:aa:bb:be" -}}
+            {{- $hostname := "unknown" -}}
+            {{- $count := 1 -}}
+            {{- range $net := .Values.network -}}
+              {{- if has $net.macaddress $controllers -}}
+                {{- range $mac := $controllers -}}
+                  {{- if eq $net.macaddress $mac -}}
+                    {{- $hostname = cat $control_label $count | nospace -}}
+                  {{- end -}}
+                  {{- $count = add $count 1 -}}
+                {{- end -}}
+              {{- end -}}
+            {{- end -}}
+
+            {{/* https://en.bitcoin.it/wiki/Bech32 */}}
+            {{- $random_suffix := regexReplaceAll "[^qpzry9x8gf2tvdw0s3jn54khce6mua7l]" (randAlpha 32 | lower) "" | trunc 5 -}}
+
+            hostname: {{ $hostname }}-{{ $random_suffix }}
+            k3s:
+              enabled: true
+              args:
+                - --disable traefik,servicelb
+                - --flannel-backend none
+                - --disable-network-policy
+                - --cluster-cidr 172.24.0.0/18
+                - --service-cidr 172.24.64.0/18
+                - --write-kubeconfig-mode 0644
+                - --node-label "graphics=dri"
+                - --cluster-init
+              env: { K3S_URL: "" }
+
+  # -- https://github.com/derailed/k9s/issues/1399
+  initramfs:
+    - name: Increase number of open files
+      sysctl:
+        fs.inotify.max_user_instances: "8192"
+        fs.inotify.max_user_watches: "524288"
+
+  boot:
+    - name: "Set up various kube environment variables"
+      environment:
+        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+        CONTAINERD_ADDRESS: /run/k3s/containerd/containerd.sock
+        CONTAINERD_NAMESPACE: k8s.io
