@@ -57,6 +57,9 @@ stages:
         - path: /oem/60_k3s_config.yaml
           content: |
             #cloud-config
+            {{/* Gotta put a newline after this (no dash before double closing curly braces) because the rest of the templates chomp newlines */}}
+            {{- $newline := true }}
+
             {{- $control_label := "gadget" -}}
             {{- $controllers := list "00:01:2e:aa:bb:be" -}}
             {{- $hostname := "unknown" -}}
