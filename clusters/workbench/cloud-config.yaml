@@ -90,6 +90,18 @@ stages:
                 - --cluster-init
               env: { K3S_URL: "" }
 
+    - name: "Set static IP to ensure no dependency on router"
+      files:
+        - path: /etc/systemd/network/20-dhcp.network
+          permissions: 0644
+          content: |
+            [Match]
+            Name=en*
+            [Network]
+            Address=192.168.1.11/24
+            Gateway=192.168.1.1
+            DNS=192.168.1.1
+
   # -- https://github.com/derailed/k9s/issues/1399
   initramfs:
     - name: Increase number of open files
