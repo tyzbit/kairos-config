@@ -16,7 +16,7 @@ spec:
         nodeSelector: all()
     multiInterfaceMode: None
     nodeAddressAutodetectionV4:
-      firstFound: true
+      skipInterface: enp0.*
   cni:
     ipam:
       type: Calico
