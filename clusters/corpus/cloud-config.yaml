@@ -196,6 +196,17 @@ stages:
                 - --node-label "coral=attached"
             {{- end }}
 
+    - name: "Disable onboard network if an add-on card is present"
+      if: lspci | grep Ethernet | grep -qv Aquantia
+      files:
+        - path: /etc/systemd/network/10-disable-onboard.network
+          permissions: 0644
+          content: |
+            [Match]
+            Name=enp0*
+            [Link]
+            Unmanaged=true
+
   # -- https://github.com/derailed/k9s/issues/1399
   initramfs:
     - name: Increase number of open files
