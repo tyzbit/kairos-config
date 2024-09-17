@@ -18,7 +18,7 @@ bundles:
   - targets: [run://quay.io/kairos/community-bundles:flux_latest]
 
 flux:
-  # -- The actual value is in http://nas.onair/workbench_sensitive_configs.yaml
+  # -- The actual value is in http://nas.home.arpa/workbench_sensitive_configs.yaml
   # env:
   #   GITHUB_TOKEN: secretstuff
   github:
@@ -32,11 +32,11 @@ stages:
   after-install-chroot:
     - name: "Add sensitive config values"
       downloads:
-        - url: http://nas.onair/workbench_sensitive_configs.yaml
+        - url: http://nas.home.arpa/workbench_sensitive_configs.yaml
           path: /oem/50_sensitive_configs.yaml
     - name: "Add SOPS secret"
       downloads:
-        - url: http://nas.onair/workbench_sops_secret.yaml
+        - url: http://nas.home.arpa/workbench_sops_secret.yaml
           path: /var/lib/rancher/k3s/server/manifests/sops-secret.yaml
 
     # -- These are in this repo
