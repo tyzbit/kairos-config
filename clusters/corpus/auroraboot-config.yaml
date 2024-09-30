@@ -4,6 +4,5 @@ state_dir: "/storage"
 # release_version: v2.4.1
 # flavor: debian
 # repository: kairos-io/kairos
-# container_image: ghcr.io/tyzbit/kairos-distros:debian-v2.4.3-k3sv1.28.2-2 # last known good
-# container_image: ghcr.io/tyzbit/kairos-distros:debian-v3.1.1-k3sv1.30.2-k3s1-68
-container_image: ghcr.io/tyzbit/kairos-distros:debian-v3.2.0-k3sv1.30.5-k3s1-74
+container_image: ghcr.io/tyzbit/kairos-distros:debian-v2.4.3-k3sv1.28.2-2 # last known good
+# container_image: ghcr.io/tyzbit/kairos-distros:debian-v3.2.0-k3sv1.30.5-k3s1-74
