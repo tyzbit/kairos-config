@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-version=v3.2.0
+version=v2.7.4
 
 set -e
 
