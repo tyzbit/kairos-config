@@ -56,27 +56,22 @@ stages:
       commands:
         - | # Erase the disk
           parted --script --machine -- /dev/sda mklabel gpt &&
-          echo "Disk erased"
-        - | # EFI 1024MiB (skip first 1GiB)
+          echo "Disk erased" &&
           parted --script --machine -- /dev/sda mkpart efi fat32 1023 2048 set 1 esp on &&
           echo "EFI partition created" &&
-          mkfs.vfat -n COS_GRUB /dev/sda1
-        - | # OEM 1024MiB
+          mkfs.vfat -n COS_GRUB /dev/sda1 &&
           parted --script --machine -- /dev/sda mkpart oem ext4 2049 3073 &&
           echo "OEM partition created" && 
           mkfs.ext4 -L COS_OEM /dev/sda2 &&
-          echo "OEM filesystem created"
-        - | # Recovery 10240MiB
+          echo "OEM filesystem created" &&
           parted --script --machine -- /dev/sda mkpart recovery ext4 3074 13314 &&
           echo "Recovery partition created" &&
           mkfs.ext4 -L COS_RECOVERY /dev/sda3 &&
-          echo "OEM filesystem created"
-        - | # State 25600MiB
+          echo "OEM filesystem created" &&
           parted --script --machine -- /dev/sda mkpart state ext4 13315 38915 &&
           echo "State partition created" &&
           mkfs.ext4 -L COS_STATE /dev/sda4 &&
-          echo "OEM filesystem created"
-        - | # Persistent remaining space
+          echo "OEM filesystem created" &&
           parted --script --machine -- /dev/sda mkpart persistent ext4 38916 100% &&
           echo "Persistent partition created" &&
           mkfs.ext4 -L COS_PERSISTENT /dev/sda5 &&
