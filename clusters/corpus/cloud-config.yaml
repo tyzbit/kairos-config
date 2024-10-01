@@ -10,6 +10,8 @@ users:
 install:
   auto: true
   no-format: true
+  # `no-format: true` requires `force: true` to actually install
+  force: true
   reboot: true
   grub_options:
     extra_cmdline: >-
