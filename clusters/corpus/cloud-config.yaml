@@ -64,14 +64,14 @@ stages:
         #   size: 0 # All available space
         add_partitions:
           # -- All sizes bellow are in MB
-          # -- https://kairos.io/docs/advanced/configuring_partitions/
-          - fsLabel: COS_GRUB
-            size: 512
-            pLabel: efi
-            filesystem: fat
+          # # -- https://kairos.io/docs/advanced/configuring_partitions/
+          # - fsLabel: COS_GRUB
+          #   size: 512
+          #   pLabel: efi
+          #   filesystem: fat
           - pLabel: oem
             fsLabel: COS_OEM
-            size: 512
+            size: 1024
           # -- https://github.com/kairos-io/kairos/issues/1265#issuecomment-1621433780
           - pLabel: recovery
             size: 10240
