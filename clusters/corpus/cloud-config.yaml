@@ -56,7 +56,6 @@ stages:
       commands:
         - |
           parted --script --machine -- /dev/sda mklabel gpt
-          fatresize -s 2G /dev/sda1
       layout: &layout
         device:
           path: /dev/sda
