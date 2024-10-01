@@ -59,19 +59,28 @@ stages:
           echo "Disk erased"
         - | # EFI 1024MiB (skip first 1GiB)
           parted --script --machine -- /dev/sda mkpart efi fat32 1023 2048 set 1 esp on &&
-          echo "EFI partition created"
+          echo "EFI partition created" &&
+          mkfs.vfat -L COS_GRUB /dev/sda1
         - | # OEM 1024MiB
-          parted --script --machine -- /dev/sda mkpart COS_OEM ext4 2049 3073 &&
-          echo "OEM partition created"
+          parted --script --machine -- /dev/sda mkpart oem ext4 2049 3073 &&
+          echo "OEM partition created" && 
+          mkfs.ext4 -L COS_OEM /dev/sda2 &&
+          echo "OEM filesystem created"
         - | # Recovery 10240MiB
-          parted --script --machine -- /dev/sda mkpart COS_RECOVERY ext4 3074 13314 &&
-          echo "Recovery partition created"
+          parted --script --machine -- /dev/sda mkpart recovery ext4 3074 13314 &&
+          echo "Recovery partition created" &&
+          mkfs.ext4 -L COS_RECOVERY /dev/sda3 &&
+          echo "OEM filesystem created"
         - | # State 25600MiB
-          parted --script --machine -- /dev/sda mkpart COS_STATE ext4 13315 38915 &&
-          echo "State partition created"
+          parted --script --machine -- /dev/sda mkpart state ext4 13315 38915 &&
+          echo "State partition created" &&
+          mkfs.ext4 -L COS_STATE /dev/sda4 &&
+          echo "OEM filesystem created"
         - | # Persistent remaining space
-          parted --script --machine -- /dev/sda mkpart COS_PERSISTENT ext4 38916 100% &&
-          echo "Persistent partition created"
+          parted --script --machine -- /dev/sda mkpart persistent ext4 38916 100% &&
+          echo "Persistent partition created" &&
+          mkfs.ext4 -L COS_PERSISTENT /dev/sda5 &&
+          echo "OEM filesystem created"
     #   layout: &layout
     #     device:
     #       path: /dev/sda
@@ -84,9 +93,6 @@ stages:
     #       #   size: 512
     #       #   pLabel: efi
     #       #   filesystem: fat
-    #       - pLabel: oemfake
-    #         fsLabel: COS_OEM_FAKE
-    #         size: 1024
     #       - pLabel: oem
     #         fsLabel: COS_OEM
     #         size: 1024
