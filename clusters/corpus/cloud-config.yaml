@@ -55,17 +55,23 @@ stages:
       name: "Conditionally partition sda"
       commands:
         - | # Erase the disk
-          parted --script --machine -- /dev/sda mklabel gpt
+          parted --script --machine -- /dev/sda mklabel gpt &&
+          echo "Disk erased"
         - | # EFI 1024MiB (skip first 1GiB)
-          parted --script --machine -- /dev/sda mkpart efi fat32 1023 2048 set 1 esp on
+          parted --script --machine -- /dev/sda mkpart efi fat32 1023 2048 set 1 esp on &&
+          echo "EFI partition created"
         - | # OEM 1024MiB
-          parted --script --machine -- /dev/sda mkpart oem ext4 2049 3073
+          parted --script --machine -- /dev/sda mkpart COS_OEM ext4 2049 3073 &&
+          echo "OEM partition created"
         - | # Recovery 10240MiB
-          parted --script --machine -- /dev/sda mkpart recovery ext4 3074 13314
+          parted --script --machine -- /dev/sda mkpart COS_RECOVERY ext4 3074 13314 &&
+          echo "Recovery partition created"
         - | # State 25600MiB
-          parted --script --machine -- /dev/sda mkpart state ext4 13315 38915
+          parted --script --machine -- /dev/sda mkpart COS_STATE ext4 13315 38915 &&
+          echo "State partition created"
         - | # Persistent remaining space
-          parted --script --machine -- /dev/sda mkpart persistent ext4 38916 100%
+          parted --script --machine -- /dev/sda mkpart COS_PERSISTENT ext4 38916 100% &&
+          echo "Persistent partition created"
     #   layout: &layout
     #     device:
     #       path: /dev/sda
