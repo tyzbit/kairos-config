@@ -55,27 +55,27 @@ stages:
       name: "Conditionally partition sda"
       commands:
         - | # Erase the disk
-          parted --script --machine -- /dev/sda mklabel gpt &&
-          echo "Disk erased" &&
-          parted --script --machine -- /dev/sda mkpart efi fat32 1023 2048 set 1 esp on &&
-          echo "EFI partition created" &&
-          mkfs.vfat -n COS_GRUB /dev/sda1 &&
-          parted --script --machine -- /dev/sda mkpart oem ext4 2049 3073 &&
-          echo "OEM partition created" && 
-          mkfs.ext4 -L COS_OEM /dev/sda2 &&
-          echo "OEM filesystem created" &&
-          parted --script --machine -- /dev/sda mkpart recovery ext4 3074 13314 &&
-          echo "Recovery partition created" &&
-          mkfs.ext4 -L COS_RECOVERY /dev/sda3 &&
-          echo "OEM filesystem created" &&
-          parted --script --machine -- /dev/sda mkpart state ext4 13315 38915 &&
-          echo "State partition created" &&
-          mkfs.ext4 -L COS_STATE /dev/sda4 &&
-          echo "OEM filesystem created" &&
-          parted --script --machine -- /dev/sda mkpart persistent ext4 38916 100% &&
-          echo "Persistent partition created" &&
-          mkfs.ext4 -L COS_PERSISTENT /dev/sda5 &&
-          echo "OEM filesystem created"
+          parted --script --machine -- /dev/sda mklabel gpt 1>/dev/null
+        - | # EFI 1024MiB (skip first 1GiB)
+          parted --script --machine -- /dev/sda mkpart efi fat32 1023 2048 set 1 esp on 1>/dev/null
+        - |
+          mkfs.vfat -n COS_GRUB /dev/sda1 1>/dev/null
+        - | # OEM 1024MiB
+          parted --script --machine -- /dev/sda mkpart oem ext4 2049 3073 1>/dev/null
+        - |
+          mkfs.ext4 -L COS_OEM /dev/sda2 1>/dev/null
+        - | # Recovery 10240MiB
+          parted --script --machine -- /dev/sda mkpart recovery ext4 3074 13314 1>/dev/null
+        - |
+          mkfs.ext4 -L COS_RECOVERY /dev/sda3 1>/dev/null
+        - | # State 25600MiB
+          parted --script --machine -- /dev/sda mkpart state ext4 13315 38915 1>/dev/null
+        - |
+          mkfs.ext4 -L COS_STATE /dev/sda4 1>/dev/null
+        - | # Persistent remaining space
+          parted --script --machine -- /dev/sda mkpart persistent ext4 38916 100% 1>/dev/null
+        - |
+          mkfs.ext4 -L COS_PERSISTENT /dev/sda5 1>/dev/null
     #   layout: &layout
     #     device:
     #       path: /dev/sda
@@ -119,11 +119,11 @@ stages:
   after-install-chroot:
     - name: "Add sensitive config values"
       downloads:
-        - url: http://nas.onair/corpus_sensitive_configs.yaml
+        - url: http://nas.home.arpa/corpus_sensitive_configs.yaml
           path: /oem/50_sensitive_configs.yaml
     - name: "Add SOPS secret"
       downloads:
-        - url: http://nas.onair/corpus_sops_secret.yaml
+        - url: http://nas.home.arpa/corpus_sops_secret.yaml
           path: /var/lib/rancher/k3s/server/manifests/sops-secret.yaml
 
     # -- These are in this repo
