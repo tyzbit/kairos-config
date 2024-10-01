@@ -60,11 +60,11 @@ stages:
         add_partitions:
           # -- All sizes bellow are in MB
           - fsLabel: COS_OEM
-            size: 64
+            size: 512
             pLabel: oem
           # -- https://github.com/kairos-io/kairos/issues/1265#issuecomment-1621433780
           - fsLabel: COS_ACTIVE
-            size: &os-size 8500
+            size: &os-size 16000
             pLabel: system
           - fsLabel: COS_RECOVERY
             size: *os-size
