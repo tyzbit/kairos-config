@@ -55,7 +55,7 @@ stages:
       name: "Conditionally partition sda"
       commands:
         - |
-          parted --script --machine -- /dev/sda mklabel gpt
+          parted --script --machine -- /dev/sda mklabel gpt reizepart 1 2G
       layout: &layout
         device:
           path: /dev/sda
