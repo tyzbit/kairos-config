@@ -54,49 +54,60 @@ stages:
     - if: "[ -e /dev/sda ]"
       name: "Conditionally partition sda"
       commands:
-        - |
+        - | # Erase the disk
           parted --script --machine -- /dev/sda mklabel gpt
-        - |
-          parted --script --machine -- /dev/sda mkpart efi fat32 1MiB 1025MiB set 1 esp on
-      layout: &layout
-        device:
-          path: /dev/sda
-        # expand_partition:
-        #   size: 0 # All available space
-        add_partitions:
-          # -- All sizes bellow are in MB
-          # # -- https://kairos.io/docs/advanced/configuring_partitions/
-          # - fsLabel: COS_GRUB
-          #   size: 512
-          #   pLabel: efi
-          #   filesystem: fat
-          - pLabel: oem
-            fsLabel: COS_OEM
-            size: 1024
-          # -- https://github.com/kairos-io/kairos/issues/1265#issuecomment-1621433780
-          - pLabel: recovery
-            size: 10240
-            fsLabel: COS_RECOVERY
-          - pLabel: state
-            size: 25600
-            fsLabel: COS_STATE
-          - pLabel: persistent
-            size: 0 # use all available space
-            fsLabel: COS_PERSISTENT
-            filesystem: "ext4"
-          # # -- missing from https://kairos.io/docs/advanced/configuring_partitions/ but needed
-          # - pLabel: system
-          #   size: 10240
-          #   fsLabel: COS_ACTIVE
-    - if: "[ ! -e /dev/sda ]"
-      name: "Conditionally partition nvme0n1"
-      commands:
-        - |
-          parted --script --machine -- /dev/nvme0n1 mklabel gpt
-      layout:
-        <<: *layout
-        device:
-          path: /dev/nvme0n1
+        - | # EFI 1024MiB (skip first 1GiB)
+          parted --script --machine -- /dev/sda mkpart efi fat32 1023 2048 set 1 esp on
+        - | # OEM 1024MiB
+          parted --script --machine -- /dev/sda mkpart oem ext4 2049 3073
+        - | # Recovery 10240MiB
+          parted --script --machine -- /dev/sda mkpart recovery ext4 3074 13314
+        - | # State 25600MiB
+          parted --script --machine -- /dev/sda mkpart state ext4 13315 38915
+        - | # Persistent remaining space
+          parted --script --machine -- /dev/sda mkpart persistent ext4 38916 100%
+    #   layout: &layout
+    #     device:
+    #       path: /dev/sda
+    #     # expand_partition:
+    #     #   size: 0 # All available space
+    #     add_partitions:
+    #       # -- All sizes bellow are in MB
+    #       # # -- https://kairos.io/docs/advanced/configuring_partitions/
+    #       # - fsLabel: COS_GRUB
+    #       #   size: 512
+    #       #   pLabel: efi
+    #       #   filesystem: fat
+    #       - pLabel: oemfake
+    #         fsLabel: COS_OEM_FAKE
+    #         size: 1024
+    #       - pLabel: oem
+    #         fsLabel: COS_OEM
+    #         size: 1024
+    #       # -- https://github.com/kairos-io/kairos/issues/1265#issuecomment-1621433780
+    #       - pLabel: recovery
+    #         size: 10240
+    #         fsLabel: COS_RECOVERY
+    #       - pLabel: state
+    #         size: 25600
+    #         fsLabel: COS_STATE
+    #       - pLabel: persistent
+    #         size: 0 # use all available space
+    #         fsLabel: COS_PERSISTENT
+    #         filesystem: "ext4"
+    #       # # -- missing from https://kairos.io/docs/advanced/configuring_partitions/ but needed
+    #       # - pLabel: system
+    #       #   size: 10240
+    #       #   fsLabel: COS_ACTIVE
+    # - if: "[ ! -e /dev/sda ]"
+    #   name: "Conditionally partition nvme0n1"
+    #   commands:
+    #     - |
+    #       parted --script --machine -- /dev/nvme0n1 mklabel gpt
+    #   layout:
+    #     <<: *layout
+    #     device:
+    #       path: /dev/nvme0n1
 
   after-install-chroot:
     - name: "Add sensitive config values"
