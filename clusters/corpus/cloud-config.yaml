@@ -56,7 +56,7 @@ stages:
       commands:
         - |
           parted --script --machine -- /dev/sda mklabel gpt
-          parted --script --machine -- reizepart 1 2G
+          parted --script --machine -- /dev/sda reizepart 1 2G
       layout: &layout
         device:
           path: /dev/sda
