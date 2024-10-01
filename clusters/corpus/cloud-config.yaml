@@ -55,8 +55,9 @@ stages:
       name: "Conditionally partition sda"
       commands:
         - |
-          parted --script --machine -- /dev/sda mklabel gpt &&
-          parted --script --machine -- /dev/sda reizepart 1 2G
+          parted --script --machine -- /dev/sda mklabel gpt
+        - |
+          parted --script --machine -- /dev/sda mkpart efi fat32 1MiB 1025MiB set 1 esp on
       layout: &layout
         device:
           path: /dev/sda
