@@ -10,7 +10,7 @@ users:
 install:
   auto: true
   no-format: true
-  # `no-format: true` requires `force: true` to actually install
+  # -- `no-format: true` requires `force: true` to actually install
   force: true
   reboot: true
   grub_options:
@@ -59,12 +59,17 @@ stages:
           size: 0 # All available space
         add_partitions:
           # -- All sizes bellow are in MB
-          - fsLabel: COS_OEM
+          # -- https://kairos.io/docs/advanced/configuring_partitions/
+          - fsLabel: COS_GRUB
             size: 512
+            pLabel: efi
+            filesystem: fat
+          - fsLabel: COS_OEM
+            size: 64
             pLabel: oem
           # -- https://github.com/kairos-io/kairos/issues/1265#issuecomment-1621433780
           - fsLabel: COS_ACTIVE
-            size: &os-size 16000
+            size: &os-size 8500
             pLabel: system
           - fsLabel: COS_RECOVERY
             size: *os-size
