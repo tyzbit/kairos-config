@@ -60,7 +60,7 @@ stages:
         - | # EFI 1024MiB (skip first 1GiB)
           parted --script --machine -- /dev/sda mkpart efi fat32 1023 2048 set 1 esp on &&
           echo "EFI partition created" &&
-          mkfs.vfat -L COS_GRUB /dev/sda1
+          mkfs.vfat -n COS_GRUB /dev/sda1
         - | # OEM 1024MiB
           parted --script --machine -- /dev/sda mkpart oem ext4 2049 3073 &&
           echo "OEM partition created" && 
