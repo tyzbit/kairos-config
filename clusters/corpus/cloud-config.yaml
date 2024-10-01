@@ -20,6 +20,10 @@ install:
       gfxpayload=800x600x32
       gfxmode=800x600x32
   extra-dirs-rootfs: &longhorn [/var/lib/longhorn]
+  # partitions.oem.size: 64
+  # partitions.recovery.size: 10240
+  # partitions.state.size: 20480
+  # partitions.persistent.size: 10240
 
 upgrade:
   extra-dirs-rootfs: *longhorn
@@ -55,8 +59,8 @@ stages:
       layout: &layout
         device:
           path: /dev/sda
-        expand_partition:
-          size: 0 # All available space
+        # expand_partition:
+        #   size: 0 # All available space
         add_partitions:
           # -- All sizes bellow are in MB
           # -- https://kairos.io/docs/advanced/configuring_partitions/
@@ -64,23 +68,24 @@ stages:
             size: 512
             pLabel: efi
             filesystem: fat
-          - fsLabel: COS_OEM
-            size: 64
-            pLabel: oem
+          - pLabel: oem
+            fsLabel: COS_OEM
+            size: 512
           # -- https://github.com/kairos-io/kairos/issues/1265#issuecomment-1621433780
-          - fsLabel: COS_ACTIVE
-            size: &os-size 8500
-            pLabel: system
-          - fsLabel: COS_RECOVERY
-            size: *os-size
-            pLabel: recovery
-          - fsLabel: COS_STATE
-            size: 18000
-            pLabel: state
-          - fsLabel: COS_PERSISTENT
-            pLabel: persistent
-            size: 25000
+          - pLabel: recovery
+            size: 10240
+            fsLabel: COS_RECOVERY
+          - pLabel: state
+            size: 20480
+            fsLabel: COS_STATE
+          - pLabel: persistent
+            size: 0 # use all available space
+            fsLabel: COS_PERSISTENT
             filesystem: "ext4"
+          # # -- missing from https://kairos.io/docs/advanced/configuring_partitions/ but needed
+          # - pLabel: system
+          #   size: 10240
+          #   fsLabel: COS_ACTIVE
     - if: "[ ! -e /dev/sda ]"
       name: "Conditionally partition nvme0n1"
       commands:
