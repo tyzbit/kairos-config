@@ -38,7 +38,7 @@ bundles:
   - targets: [run://quay.io/kairos/community-bundles:flux_latest]
 
 flux:
-  # -- The actual value is in http://nas.onair/sensitive_configs.yaml
+  # -- The actual value is in http://nas.home.arpa/sensitive_configs.yaml
   # env:
   #   GITHUB_TOKEN: secretstuff
   github:
