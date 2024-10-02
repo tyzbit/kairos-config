@@ -80,23 +80,23 @@ stages:
         - | # EFI 1024MiB (skip first 1GiB)
           parted --script --machine -- /dev/nvme0n1 mkpart efi fat32 1023 2048 set 1 esp on 1>/dev/null
         - |
-          mkfs.vfat -n COS_GRUB /dev/nvme0n1 1>/dev/null
+          mkfs.vfat -n COS_GRUB /dev/nvme0n1p1 1>/dev/null
         - | # OEM 1024MiB
-          parted --script --machine -- /dev/nvme0n2 mkpart oem ext4 2049 3073 1>/dev/null
+          parted --script --machine -- /dev/nvme0n1 mkpart oem ext4 2049 3073 1>/dev/null
         - |
-          mkfs.ext4 -L COS_OEM /dev/nvme0n2 1>/dev/null
+          mkfs.ext4 -L COS_OEM /dev/nvme0n1p2 1>/dev/null
         - | # Recovery 10240MiB
-          parted --script --machine -- /dev/nvme0n3 mkpart recovery ext4 3074 13314 1>/dev/null
+          parted --script --machine -- /dev/nvme0n1 mkpart recovery ext4 3074 13314 1>/dev/null
         - |
-          mkfs.ext4 -L COS_RECOVERY /dev/nvme0n3 1>/dev/null
+          mkfs.ext4 -L COS_RECOVERY /dev/nvme0n1p3 1>/dev/null
         - | # State 25600MiB
-          parted --script --machine -- /dev/nvme0n4 mkpart state ext4 13315 38915 1>/dev/null
+          parted --script --machine -- /dev/nvme0n1 mkpart state ext4 13315 38915 1>/dev/null
         - |
-          mkfs.ext4 -L COS_STATE /dev/nvme0n4 1>/dev/null
+          mkfs.ext4 -L COS_STATE /dev/nvme0n1p4 1>/dev/null
         - | # Persistent remaining space
-          parted --script --machine -- /dev/nvme0n5 mkpart persistent ext4 38916 100% 1>/dev/null
+          parted --script --machine -- /dev/nvme0n1 mkpart persistent ext4 38916 100% 1>/dev/null
         - |
-          mkfs.ext4 -L COS_PERSISTENT /dev/nvme0n5 1>/dev/null
+          mkfs.ext4 -L COS_PERSISTENT /dev/nvme0n1p5 1>/dev/null
 
   after-install-chroot:
     - name: "Add sensitive config values"
