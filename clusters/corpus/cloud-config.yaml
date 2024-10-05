@@ -105,7 +105,7 @@ stages:
     - name: "Configure custom GRUB options"
       commands:
         - >-
-          sed -E 's/(GRUB_CMDLINE_LINUX=")/\1
+          sed -iE 's/(GRUB_CMDLINE_LINUX=")/\1
           pcie_aspm=off
           nvme_core.default_ps_max_latency_us=0
           gfxpayload=1920x1080x32 
