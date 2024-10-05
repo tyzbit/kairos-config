@@ -13,12 +13,14 @@ install:
   # -- `no-format: true` requires `force: true` to actually install
   force: true
   reboot: true
-  grub_options:
-    extra_cmdline: >-
-      pcie_aspm=off
-      nvme_core.default_ps_max_latency_us=0
-      gfxpayload=800x600x32
-      gfxmode=800x600x32
+  # -- extra_cmdline doesn't appear to have any effect
+  # -- When I open an issue about it after confirming, I'll add a link here
+  # grub_options:
+  #   extra_cmdline: >-
+  #     pcie_aspm=off
+  #     nvme_core.default_ps_max_latency_us=0
+  #     gfxpayload=1920x1080x32
+  #     gfxmode=1920x1080x32
   extra-dirs-rootfs: &longhorn [/var/lib/longhorn]
 
 upgrade:
@@ -99,6 +101,18 @@ stages:
           mkfs.ext4 -L COS_PERSISTENT /dev/nvme0n1p5 1>/dev/null
 
   after-install-chroot:
+    # -- Alternative to extra_cmdline
+    - name: "Configure custom GRUB options"
+      commands:
+        - >-
+          sed -E 's/(GRUB_CMDLINE_LINUX=")/\1
+          pcie_aspm=off
+          nvme_core.default_ps_max_latency_us=0
+          gfxpayload=1920x1080x32 
+          gfxmode=1920x1080x32
+          /g'
+          /etc/default/grub
+        - update-grub
     - name: "Add sensitive config values"
       downloads:
         - url: http://nas.home.arpa/corpus_sensitive_configs.yaml
