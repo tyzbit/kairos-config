@@ -194,7 +194,7 @@ stages:
                 - --kubelet-arg=config=/etc/rancher/k3s/kubelet-config.yaml
             {{- end }}
               # -- Options that can apply to server or agent
-                - --node-ip $ip
+                - --node-ip {{ $ip }}
             {{- if $coral_attached }}
                 - --node-label "coral=attached"
             {{- end }}
