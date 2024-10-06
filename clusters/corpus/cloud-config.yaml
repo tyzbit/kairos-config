@@ -197,7 +197,7 @@ stages:
     - name: "Disable onboard network if an add-on card is present"
       if: lspci | grep Ethernet | grep -qv Aquantia
       files:
-        - path: /etc/systemd/network/30-disable-onboard.network
+        - path: /etc/systemd/network/10-disable-onboard.network
           permissions: 0644
           content: |
             [Match]
