@@ -117,6 +117,7 @@ stages:
             {{- $workers := list "6c:3c:8c:4f:6e:ff" "6c:3c:8c:54:fa:43" "this space left intentionally blank" "6c:3c:8c:54:fe:37" -}}
             {{- $no_longhorn := list "00:01:2e:aa:bb:be" -}}
             {{- $hostname := "unknown" -}}
+            {{- $ip := "127.0.0.1" -}}
             {{- $coral_attached := false -}}
             {{- $disable_longhorn := false -}}
             {{- $count := 1 -}}
@@ -126,6 +127,7 @@ stages:
                 {{- range $mac := $controllers -}}
                   {{- if eq $net.macaddress $mac -}}
                     {{- $hostname = cat $control_label $count | nospace -}}
+                    {{- $ip = cat "192.168.1.5" $count | nospace }}
                   {{- end -}}
                   {{- $count = add $count 1 -}}
                 {{- end -}}
@@ -135,6 +137,7 @@ stages:
                 {{- range $mac := $workers -}}
                   {{- if eq $net.macaddress $mac -}}
                     {{- $hostname = cat $worker_label $count | nospace -}}
+                     {{- $ip = cat "192.168.1.4" $count | nospace }}
                   {{- end -}}
                   {{- $count = add $count 1 -}}
                 {{- end -}}
@@ -174,6 +177,11 @@ stages:
                 - --write-kubeconfig-mode 0644
                 - --node-label "graphics=dri"
                 - --node-taint node-role.kubernetes.io/control-plane=effect:PreferNoSchedule
+            {{- if $bootstrap_node }}
+              # # Disabled because the cluster is already running. Uncomment to start a new cluster.
+              #   - --cluster-init
+              # env: { K3S_URL: "" }
+            {{- end }}
             {{- else }}
             k3s-agent:
               enabled: true
@@ -185,11 +193,8 @@ stages:
                 - --node-label "graphics=dri"
                 - --kubelet-arg=config=/etc/rancher/k3s/kubelet-config.yaml
             {{- end }}
-            {{- if $bootstrap_node }}
-              # # Disabled because the cluster is already running. Uncomment to start a new cluster.
-              #   - --cluster-init
-              # env: { K3S_URL: "" }
-            {{- end }}
+              # -- Options that can apply to server or agent
+                - --node-ip $ip
             {{- if $coral_attached }}
                 - --node-label "coral=attached"
             {{- end }}
