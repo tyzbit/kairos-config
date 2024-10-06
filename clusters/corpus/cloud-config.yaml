@@ -19,8 +19,8 @@ install:
     extra_cmdline: >-
       pcie_aspm=off
       nvme_core.default_ps_max_latency_us=0
-      gfxpayload=800x600,1280x720,1920x1080
-      gfxmode=800x600,1280x720,1920x1080
+      gfxpayload=1024x768
+      gfxmode=1024x768
   extra-dirs-rootfs: &longhorn [/var/lib/longhorn]
 
 upgrade:
