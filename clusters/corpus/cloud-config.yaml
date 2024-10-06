@@ -7,20 +7,20 @@ users:
     groups: [admin]
     ssh_authorized_keys: [github:tyzbit]
 
+strict: true
+
 install:
   auto: true
   no-format: true
   # -- `no-format: true` requires `force: true` to actually install
   force: true
   reboot: true
-  # -- extra_cmdline doesn't appear to have any effect
-  # -- When I open an issue about it after confirming, I'll add a link here
-  # grub_options:
-  #   extra_cmdline: >-
-  #     pcie_aspm=off
-  #     nvme_core.default_ps_max_latency_us=0
-  #     gfxpayload=1920x1080x32
-  #     gfxmode=1920x1080x32
+  grub_options:
+    extra_cmdline: >-
+      pcie_aspm=off
+      nvme_core.default_ps_max_latency_us=0
+      gfxpayload=800x600,1280x720,1920x1080
+      gfxmode=800x600,1280x720,1920x1080
   extra-dirs-rootfs: &longhorn [/var/lib/longhorn]
 
 upgrade:
@@ -48,71 +48,41 @@ flux:
 
 stages:
   # -- If a node has /dev/sda, use that. Otherwise use /dev/nvme0n1
+  # -- The sleeps are because it appears mkfs might miss a partition created
+  # -- by mkpart if it runs too quickly.
   kairos-install.pre.before:
     - if: "[ -e /dev/sda ]"
       name: "Conditionally partition sda"
       commands:
-        - | # Erase the disk
-          parted --script --machine -- /dev/sda mklabel gpt 1>/dev/null
-        - | # EFI 1024MiB (skip first 1GiB)
-          parted --script --machine -- /dev/sda mkpart efi fat32 1023 2048 set 1 esp on 1>/dev/null
-        - |
-          mkfs.vfat -n COS_GRUB /dev/sda1 1>/dev/null
-        - | # OEM 1024MiB
-          parted --script --machine -- /dev/sda mkpart oem ext4 2049 3073 1>/dev/null
-        - |
-          mkfs.ext4 -L COS_OEM /dev/sda2 1>/dev/null
-        - | # Recovery 10240MiB
-          parted --script --machine -- /dev/sda mkpart recovery ext4 3074 13314 1>/dev/null
-        - |
-          mkfs.ext4 -L COS_RECOVERY /dev/sda3 1>/dev/null
-        - | # State 25600MiB
-          parted --script --machine -- /dev/sda mkpart state ext4 13315 38915 1>/dev/null
-        - |
-          mkfs.ext4 -L COS_STATE /dev/sda4 1>/dev/null
-        - | # Persistent remaining space
-          parted --script --machine -- /dev/sda mkpart persistent ext4 38916 100% 1>/dev/null
-        - |
+        - >-
+          parted --script --machine -- /dev/sda mklabel gpt 1>/dev/null && sleep 1 &&
+          parted --script --machine -- /dev/sda mkpart efi fat32 1023 2048 set 1 esp on 1>/dev/null && sleep 1 &&
+          mkfs.vfat -n COS_GRUB /dev/sda1 1>/dev/null && sleep 1 &&
+          parted --script --machine -- /dev/sda mkpart oem ext4 2049 3073 1>/dev/null && sleep 1 &&
+          mkfs.ext4 -L COS_OEM /dev/sda2 1>/dev/null && sleep 1 &&
+          parted --script --machine -- /dev/sda mkpart recovery ext4 3074 13314 1>/dev/null && sleep 1 &&
+          mkfs.ext4 -L COS_RECOVERY /dev/sda3 1>/dev/null && sleep 1 &&
+          parted --script --machine -- /dev/sda mkpart state ext4 13315 38915 1>/dev/null && sleep 1 &&
+          mkfs.ext4 -L COS_STATE /dev/sda4 1>/dev/null && sleep 1 &&
+          parted --script --machine -- /dev/sda mkpart persistent ext4 38916 100% 1>/dev/null && sleep 1 &&
           mkfs.ext4 -L COS_PERSISTENT /dev/sda5 1>/dev/null
     - if: "[ ! -e /dev/sda ]"
       name: "Conditionally partition nvme0n1"
       commands:
-        - | # Erase the disk
-          parted --script --machine -- /dev/nvme0n1 mklabel gpt 1>/dev/null
-        - | # EFI 1024MiB (skip first 1GiB)
-          parted --script --machine -- /dev/nvme0n1 mkpart efi fat32 1023 2048 set 1 esp on 1>/dev/null
-        - |
-          mkfs.vfat -n COS_GRUB /dev/nvme0n1p1 1>/dev/null
-        - | # OEM 1024MiB
-          parted --script --machine -- /dev/nvme0n1 mkpart oem ext4 2049 3073 1>/dev/null
-        - |
-          mkfs.ext4 -L COS_OEM /dev/nvme0n1p2 1>/dev/null
-        - | # Recovery 10240MiB
-          parted --script --machine -- /dev/nvme0n1 mkpart recovery ext4 3074 13314 1>/dev/null
-        - |
-          mkfs.ext4 -L COS_RECOVERY /dev/nvme0n1p3 1>/dev/null
-        - | # State 25600MiB
-          parted --script --machine -- /dev/nvme0n1 mkpart state ext4 13315 38915 1>/dev/null
-        - |
-          mkfs.ext4 -L COS_STATE /dev/nvme0n1p4 1>/dev/null
-        - | # Persistent remaining space
-          parted --script --machine -- /dev/nvme0n1 mkpart persistent ext4 38916 100% 1>/dev/null
-        - |
+        - >-
+          parted --script --machine -- /dev/nvme0n1 mklabel gpt 1>/dev/null && sleep 1 &&
+          parted --script --machine -- /dev/nvme0n1 mkpart efi fat32 1023 2048 set 1 esp on 1>/dev/null && sleep 1 &&
+          mkfs.vfat -n COS_GRUB /dev/nvme0n1p1 1>/dev/null && sleep 1 &&
+          parted --script --machine -- /dev/nvme0n1 mkpart oem ext4 2049 3073 1>/dev/null && sleep 1 &&
+          mkfs.ext4 -L COS_OEM /dev/nvme0n1p2 1>/dev/null && sleep 1 &&
+          parted --script --machine -- /dev/nvme0n1 mkpart recovery ext4 3074 13314 1>/dev/null && sleep 1 &&
+          mkfs.ext4 -L COS_RECOVERY /dev/nvme0n1p3 1>/dev/null && sleep 1 &&
+          parted --script --machine -- /dev/nvme0n1 mkpart state ext4 13315 38915 1>/dev/null && sleep 1 &&
+          mkfs.ext4 -L COS_STATE /dev/nvme0n1p4 1>/dev/null && sleep 1 &&
+          parted --script --machine -- /dev/nvme0n1 mkpart persistent ext4 38916 100% 1>/dev/null && sleep 1 &&
           mkfs.ext4 -L COS_PERSISTENT /dev/nvme0n1p5 1>/dev/null
 
   after-install-chroot:
-    # -- Alternative to extra_cmdline
-    - name: "Configure custom GRUB options"
-      commands:
-        - >-
-          sed -iE 's/(GRUB_CMDLINE_LINUX=")/\1
-          pcie_aspm=off
-          nvme_core.default_ps_max_latency_us=0
-          gfxpayload=1920x1080x32 
-          gfxmode=1920x1080x32
-          /g'
-          /etc/default/grub
-        - update-grub
     - name: "Add sensitive config values"
       downloads:
         - url: http://nas.home.arpa/corpus_sensitive_configs.yaml
