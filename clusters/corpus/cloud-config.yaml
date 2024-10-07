@@ -67,23 +67,19 @@ stages:
             size: 64
 
           - fsLabel: COS_OEM
-            filesystem: ext4
             pLabel: oem
             size: 1024
 
           # -- https://github.com/kairos-io/kairos/issues/1265#issuecomment-1621433780
           - fsLabel: COS_ACTIVE
-            filesystem: ext4
             pLabel: system
             size: &os-size 10240
 
           - fsLabel: COS_RECOVERY
-            filesystem: ext4
             pLabel: recovery
             size: *os-size
 
           - fsLabel: COS_STATE
-            filesystem: ext4
             pLabel: state
             size: 20480
 
