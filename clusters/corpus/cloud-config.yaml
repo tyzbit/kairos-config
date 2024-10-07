@@ -62,25 +62,36 @@ stages:
         # -- All sizes bellow are in MB
         add_partitions: &partitions
           - fsLabel: COS_GRUB
-            size: 64
-            pLabel: efi
             filesystem: fat
+            pLabel: efi
+            size: 64
+
           - fsLabel: COS_OEM
-            size: 1024
+            filesystem: ext4
             pLabel: oem
+            size: 1024
+
           # -- https://github.com/kairos-io/kairos/issues/1265#issuecomment-1621433780
           - fsLabel: COS_ACTIVE
-            size: &os-size 10240
+            filesystem: ext4
             pLabel: system
+            size: &os-size 10240
+
           - fsLabel: COS_RECOVERY
-            size: *os-size
+            filesystem: ext4
             pLabel: recovery
+            size: *os-size
+
           - fsLabel: COS_STATE
-            size: 20480
+            filesystem: ext4
             pLabel: state
+            size: 20480
+
           - fsLabel: COS_PERSISTENT
+            filesystem: ext4
             pLabel: persistent
             size: 0 # Use remaining space
+
     - if: "[ ! -e /dev/sda ]"
       name: "Conditionally partition nvme0n1"
       commands:
