@@ -4,5 +4,5 @@
 # release_version: v2.4.1
 # flavor: debian
 # repository: kairos-io/kairos
-# container_image: ghcr.io/tyzbit/kairos-distros:debian-v2.4.3-k3sv1.28.2-2 # last known good
-container_image: ghcr.io/tyzbit/kairos-distros:debian-v3.2.1-k3sv1.30.5-k3s1-88
+# container_image: ghcr.io/tyzbit/kairos-distros:debian-v3.2.1-k3sv1.30.5-k3s1-86 # last known good
+container_image: ghcr.io/tyzbit/kairos-distros:debian-tyz-testing-v3.2.1-k3sv1.30.5-k3s1-89
