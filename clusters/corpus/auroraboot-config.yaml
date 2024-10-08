@@ -5,4 +5,4 @@
 # flavor: debian
 # repository: kairos-io/kairos
 # container_image: ghcr.io/tyzbit/kairos-distros:debian-v3.2.1-k3sv1.30.5-k3s1-86 # last known good
-container_image: ghcr.io/tyzbit/kairos-distros:debian-tyz-testing-v3.2.1-k3sv1.30.5-k3s1-95
+container_image: ghcr.io/tyzbit/kairos-distros:debian-tyz-testing-v3.2.1-k3sv1.30.5-k3s1-96
