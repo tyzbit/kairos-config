@@ -223,16 +223,26 @@ stages:
                 - --node-label "coral=attached"
             {{- end }}
 
+    # - name: "Disable onboard network if an add-on card is present"
+    #   if: lspci | grep Ethernet | grep -qv Aquantia
+    #   files:
+    #     - path: /etc/systemd/network/10-disable-onboard.network
+    #       permissions: 0644
+    #       content: |
+    #         [Match]
+    #         Name=enp0*
+    #         [Link]
+    #         Unmanaged=true
+
     - name: "Disable onboard network if an add-on card is present"
       if: lspci | grep Ethernet | grep -qv Aquantia
       files:
-        - path: /etc/systemd/network/10-disable-onboard.network
+        - path: /etc/modprobe.d/e1000e.conf
           permissions: 0644
           content: |
-            [Match]
-            Name=enp0*
-            [Link]
-            Unmanaged=true
+            # Don't load module for onboard Ethernet to ensure k3s only uses one interface
+            blacklist e1000e
+            install e1000e /bin/false
 
   # -- https://github.com/derailed/k9s/issues/1399
   initramfs:
