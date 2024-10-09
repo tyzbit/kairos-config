@@ -234,16 +234,6 @@ stages:
     #         [Link]
     #         Unmanaged=true
 
-    - name: "Disable onboard network if an add-on card is present"
-      if: lspci | grep Ethernet | grep -qv Aquantia
-      files:
-        - path: /etc/modprobe.d/e1000e.conf
-          permissions: 0644
-          content: |
-            # Don't load module for onboard Ethernet to ensure k3s only uses one interface
-            blacklist e1000e
-            install e1000e /bin/false
-
     - name: "Install packages"
       files:
         - path: /etc/apt/sources.list.d/debian.conf
@@ -299,6 +289,15 @@ stages:
       sysctl:
         fs.inotify.max_user_instances: "8192"
         fs.inotify.max_user_watches: "524288"
+    - name: "Disable onboard network if an add-on card is present"
+      if: lspci | grep Ethernet | grep -qv Aquantia
+      files:
+        - path: /etc/modprobe.d/e1000e.conf
+          permissions: 0644
+          content: |
+            # Don't load module for onboard Ethernet to ensure k3s only uses one interface
+            blacklist e1000e
+            install e1000e /bin/false
 
   boot:
     - name: "Format /dev/nvme0n1 if unformatted and Kairos is installed to /dev/sdX"
