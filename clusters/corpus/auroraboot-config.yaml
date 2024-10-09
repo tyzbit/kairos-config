@@ -1,7 +1,8 @@
 # container_image: ghcr.io/tyzbit/kairos-distros:debian-v3.2.1-k3sv1.30.5-k3s1-86 # last working custom
 # container_image: quay.io/kairos/debian:bookworm-standard-amd64-generic-v3.2.1-k3sv1.30.5-k3s1
-artifact_version: "v3.2.1-k3sv1.30.5+k3s1"
-release_version: "v3.2.1"
-flavor: "debian-bookworm"
-repository: "kairos-io/kairos"
+artifact_version: v3.2.1-k3sv1.30.5+k3s1
+release_version: v3.2.1
+flavor: debian
+flavor_release: bookworm
+repository: kairos-io/kairos
 state_dir: /storage
