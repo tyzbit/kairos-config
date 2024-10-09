@@ -1,1 +1,1 @@
-container_image: ghcr.io/tyzbit/kairos-distros:debian-v3.2.0-k3sv1.30.5-k3s1-106
+container_image: ghcr.io/tyzbit/kairos-distros:debian-v3.2.1-k3sv1.30.5-k3s1-107
