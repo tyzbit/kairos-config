@@ -1,1 +1,2 @@
-container_image: ghcr.io/tyzbit/kairos-distros:debian-v3.2.1-k3sv1.30.5-k3s1-116
+# container_image: ghcr.io/tyzbit/kairos-distros:debian-v3.2.1-k3sv1.30.5-k3s1-116 # last working custom
+container_image: quay.io/kairos/debian:bookworm-standard-amd64-generic-v3.2.1-k3sv1.30.5-k3s1
