@@ -58,9 +58,12 @@ stages:
         device:
           path: /dev/nvme0n1
         # -- All sizes bellow are in MB
-        add_partitions:
-          - &oem
-            fsLabel: COS_OEM
+        add_partitions: &partitions
+          - fsLabel: COS_GRUB
+            filesystem: "fat"
+            pLabel: efi
+            size: 64
+          - fsLabel: COS_OEM
             pLabel: oem
             size: 64
 
@@ -69,18 +72,15 @@ stages:
           #   pLabel: system
           #   size: &os-size 10240
 
-          - &recovery
-            fsLabel: COS_RECOVERY
+          - fsLabel: COS_RECOVERY
             pLabel: recovery
             size: 10240
 
-          - &state
-            fsLabel: COS_STATE
+          - fsLabel: COS_STATE
             pLabel: state
             size: 25600
 
-          - &persistent
-            fsLabel: COS_PERSISTENT
+          - fsLabel: COS_PERSISTENT
             filesystem: "ext4"
             pLabel: persistent
             size: 0 # Use remaining space
@@ -93,16 +93,7 @@ stages:
       layout:
         device:
           path: /dev/sda
-        add_partitions:
-          - fsLabel: COS_GRUB
-            filesystem: "fat"
-            pLabel: efi
-            size: 64
-
-          - *oem
-          - *recovery
-          - *state
-          - *persistent
+        add_partitions: *partitions
 
   after-install-chroot:
     - name: "Add sensitive config values"
