@@ -246,25 +246,31 @@ stages:
     - name: "Format /dev/nvme0n1 if unformatted and Kairos is installed to /dev/sdX"
       # -- Double brackets needed for regex compare
       if: >-
+        /bin/bash -c '
         [[ $(lsblk -o NAME,LABEL | grep OEM) =~ "-sd" ]] &&
         [[ ! $(fdisk -lo type /dev/nvme0n1 | tail -n 1) =~ "Linux" ]]
+        '
       commands:
         - parted /dev/nvme0n1 --script -a optimal -- mklabel gpt mkpart longhorn ext4 0% 100%
         - &partition mkfs.ext4 -F /dev/nvme0n1p1
 
     - name: "Partition /dev/nvme0n1p1 if unpartitioned and Kairos is installed to /dev/sdX"
       if: >-
+        /bin/bash -c '
         [[ $(lsblk -o NAME,LABEL | grep OEM) =~ "-sd" ]] &&
         [[ $(lsblk -no FSTYPE /dev/nvme0n1p1) != "ext4" ]]
+        '
       commands:
         - *partition
 
     - name: "Mount /dev/nvme0n1p1 under /var/lib/longhorn if it exists and Kairos is installed to /dev/sdX"
       if: >-
+        /bin/bash -c '
         [[ $(lsblk -o NAME,LABEL | grep OEM) =~ "-sd" ]] &&
         [[ $(lsblk -no FSTYPE /dev/nvme0n1p1) == "ext4" ]]
+        '
       commands:
-        # -- https://github.com/kairos-io/packages/blob/3482fed51f21a2155b60a0aa9ac91b1d839d1029/packages/static/kairos-overlay-files/files/system/oem/00_rootfs_uki.yaml#L43
+        # -- https://github.com/kairos-io/packages/blob/a00e1931c7b6a307c5f1b0f5918215aa51ad7a46/packages/static/kairos-overlay-files/files/system/oem/00_rootfs.yaml#L48
         - umount /var/lib/longhorn
         - mount -o rw /dev/nvme0n1p1 /var/lib/longhorn
 
