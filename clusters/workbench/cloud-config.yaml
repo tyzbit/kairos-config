@@ -11,16 +11,10 @@ strict: true
 
 install:
   auto: true
+  no-format: true
+  # -- `no-format: true` requires `force: true` to actually install
+  force: true
   reboot: true
-  system: &size
-    size: 5000
-  passive: *size
-  recovery-system: *size
-  partitions:
-    state:
-      size: 12000
-    recovery:
-      size: 16000
 
 kubevip: { enabled: false }
 growpart: { devices: ["/"] }
@@ -40,42 +34,42 @@ flux:
     network-policy: "false"
 
 stages:
-  # kairos-install.pre.before:
-  #   - if: "[ ! -e /dev/sda ]"
-  #     name: "Conditionally partition nvme0n1"
-  #     commands:
-  #       - |
-  #         parted --script --machine -- /dev/nvme0n1 mklabel gpt
-  #     layout:
-  #       device:
-  #         path: /dev/nvme0n1
-  #       # -- All sizes bellow are in MB
-  #       add_partitions:
-  #         - fsLabel: COS_GRUB
-  #           filesystem: "fat"
-  #           pLabel: efi
-  #           size: 1024
-  #         - fsLabel: COS_OEM
-  #           pLabel: oem
-  #           size: 1024
+  kairos-install.pre.before:
+    - if: "[ ! -e /dev/sda ]"
+      name: "Conditionally partition nvme0n1"
+      commands:
+        - |
+          parted --script --machine -- /dev/nvme0n1 mklabel gpt
+      layout:
+        device:
+          path: /dev/nvme0n1
+        # -- All sizes bellow are in MB
+        add_partitions:
+          - fsLabel: COS_GRUB
+            filesystem: "fat"
+            pLabel: efi
+            size: 1024
+          - fsLabel: COS_OEM
+            pLabel: oem
+            size: 1024
 
-  #         # # -- https://github.com/kairos-io/kairos/issues/1265#issuecomment-1621433780
-  #         # - fsLabel: COS_ACTIVE
-  #         #   pLabel: system
-  #         #   size: &os-size 10240
+          # # -- https://github.com/kairos-io/kairos/issues/1265#issuecomment-1621433780
+          # - fsLabel: COS_ACTIVE
+          #   pLabel: system
+          #   size: &os-size 10240
 
-  #         - fsLabel: COS_RECOVERY
-  #           pLabel: recovery
-  #           size: 10240
+          - fsLabel: COS_RECOVERY
+            pLabel: recovery
+            size: 10240
 
-  #         - fsLabel: COS_STATE
-  #           pLabel: state
-  #           size: 25600
+          - fsLabel: COS_STATE
+            pLabel: state
+            size: 25600
 
-  #         - fsLabel: COS_PERSISTENT
-  #           filesystem: "ext4"
-  #           pLabel: persistent
-  #           size: 0 # Use remaining space
+          - fsLabel: COS_PERSISTENT
+            filesystem: "ext4"
+            pLabel: persistent
+            size: 0 # Use remaining space
 
   after-install-chroot:
     - name: "Add sensitive config values"
