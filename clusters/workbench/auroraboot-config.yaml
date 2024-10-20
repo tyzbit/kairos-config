@@ -1,3 +1,1 @@
-disable_http_server: true
-disable_netboot: true
 container_image: ghcr.io/tyzbit/kairos-distros:debian-v3.2.1-k3sv1.31.1-k3s1-208
