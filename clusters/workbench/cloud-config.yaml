@@ -44,14 +44,14 @@ stages:
         device:
           path: /dev/nvme0n1
         # -- All sizes bellow are in MB
-        add_partitions: &partitions
+        add_partitions:
           - fsLabel: COS_GRUB
             filesystem: "fat"
             pLabel: efi
-            size: 64
+            size: 512
           - fsLabel: COS_OEM
             pLabel: oem
-            size: 64
+            size: 512
 
           # # -- https://github.com/kairos-io/kairos/issues/1265#issuecomment-1621433780
           # - fsLabel: COS_ACTIVE
