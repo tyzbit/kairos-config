@@ -35,8 +35,7 @@ flux:
 
 stages:
   kairos-install.pre.before:
-    - if: "[ ! -e /dev/sda ]"
-      name: "Conditionally partition nvme0n1"
+    - name: "Partition nvme0n1"
       commands:
         - |
           parted --script --machine -- /dev/nvme0n1 mklabel gpt
