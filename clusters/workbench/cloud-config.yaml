@@ -111,7 +111,7 @@ stages:
             #cloud-config{{"\n"}}
 
             {{- $control_label := "gadget" -}}
-            {{- $controllers := list "00:01:2e:aa:bb:be" -}}
+            {{- $controllers := list "58:47:ca:77:95:c3" -}}
             {{- $hostname := "unknown" -}}
             {{- $count := 1 -}}
             {{- range $net := .Values.network -}}
