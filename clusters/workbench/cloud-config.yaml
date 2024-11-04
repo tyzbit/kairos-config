@@ -144,15 +144,36 @@ stages:
 
     - name: "Set static IP to ensure no dependency on router"
       files:
+        - path: /etc/systemd/network/10-br0.netdev
+          permissions: 0644
+          content: |
+            [NetDev]
+            Name=br0
+            Kind=bridge
         - path: /etc/systemd/network/20-dhcp.network
           permissions: 0644
           content: |
             [Match]
             Name=en*
+
+            [Network]
+            Bridge=br0
+        - path: /etc/systemd/network/30-br.network
+          permissions: 0644
+          content: |
+            [Match]
+            Name=br0
+
+            [Link]
+            RequiredForOnline=routable
+            MACAddress=58:47:ca:77:95:c3
+
             [Network]
             Address=192.168.1.11/24
             Gateway=192.168.1.1
             DNS=192.168.1.1
+            [Link]
+            MTUBytes=9000
 
   # -- https://github.com/derailed/k9s/issues/1399
   initramfs:

@@ -125,13 +125,10 @@ stages:
             #cloud-config{{"\n"}}
             {{- $control_label := "neuron" -}}
             {{- $worker_label := "myocyte" -}}
-            {{- $coral := list "6c:3c:8c:4f:6e:ff" "6c:3c:8c:54:fa:43" "this space left intentionally blank" "6c:3c:8c:54:fe:37" -}}
             {{- $controllers := list "48:4d:7e:e7:6a:27" "18:66:da:0b:93:be" "48:4d:7e:dd:21:6e" "00:01:2e:aa:bb:be" -}}
             {{- $workers := list "6c:3c:8c:4f:6e:ff" "6c:3c:8c:54:fa:43" "this space left intentionally blank" "6c:3c:8c:54:fe:37" -}}
             {{- $no_longhorn := list "00:01:2e:aa:bb:be" -}}
             {{- $hostname := "unknown" -}}
-            {{- $ip := "127.0.0.1" -}}
-            {{- $coral_attached := false -}}
             {{- $disable_longhorn := false -}}
             {{- $count := 1 -}}
             {{- range $net := .Values.network -}}
@@ -140,7 +137,6 @@ stages:
                 {{- range $mac := $controllers -}}
                   {{- if eq $net.macaddress $mac -}}
                     {{- $hostname = cat $control_label $count | nospace -}}
-                    {{- $ip = cat "192.168.1.5" $count | nospace }}
                   {{- end -}}
                   {{- $count = add $count 1 -}}
                 {{- end -}}
@@ -150,7 +146,6 @@ stages:
                 {{- range $mac := $workers -}}
                   {{- if eq $net.macaddress $mac -}}
                     {{- $hostname = cat $worker_label $count | nospace -}}
-                     {{- $ip = cat "192.168.1.4" $count | nospace }}
                   {{- end -}}
                   {{- $count = add $count 1 -}}
                 {{- end -}}
@@ -158,10 +153,6 @@ stages:
 
               {{- if has $net.macaddress $no_longhorn -}}
                 {{- $disable_longhorn = true -}}
-              {{- end -}}
-
-              {{- if has $net.macaddress $coral -}}
-                {{- $coral_attached = true -}}
               {{- end -}}
 
             {{- end -}}
@@ -174,7 +165,6 @@ stages:
 
             # Control: {{ $control }}
             # Bootstrap node: {{ $bootstrap_node }}
-            # Coral: {{ $coral_attached }}
             # Disable Longhorn: {{ $disable_longhorn }}
 
             hostname: {{ $hostname }}-{{ $random_suffix }}
@@ -205,12 +195,19 @@ stages:
               {{- end }}
                 - --node-label "graphics=dri"
                 - --kubelet-arg=config=/etc/rancher/k3s/kubelet-config.yaml
-                - --node-ip {{ $ip }}
             {{- end }}
-              # -- Options that can apply to server or agent
-            {{- if $coral_attached }}
-                - --node-label "coral=attached"
-            {{- end }}
+
+    - name: "Conigure network interfaces"
+      files:
+        - path: /etc/systemd/network/20-dhcp.network
+          permissions: 0644
+          content: |
+            [Match]
+            Name=en*
+            [Network]
+            DHCP=yes
+            [Link]
+            MTUBytes=9000
 
   # -- https://github.com/derailed/k9s/issues/1399
   initramfs:
