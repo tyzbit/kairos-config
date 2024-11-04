@@ -197,18 +197,6 @@ stages:
                 - --kubelet-arg=config=/etc/rancher/k3s/kubelet-config.yaml
             {{- end }}
 
-    - name: "Conigure network interfaces"
-      files:
-        - path: /etc/systemd/network/20-dhcp.network
-          permissions: 0644
-          content: |
-            [Match]
-            Name=en*
-            [Network]
-            DHCP=yes
-            [Link]
-            MTUBytes=9000
-
   # -- https://github.com/derailed/k9s/issues/1399
   initramfs:
     - name: Increase number of open files
@@ -227,6 +215,18 @@ stages:
             # Don't load module for onboard Ethernet to ensure k3s only uses one interface
             blacklist e1000e
             install e1000e /bin/false
+
+    - name: "Conigure network interfaces"
+      files:
+        - path: /etc/systemd/network/20-dhcp.network
+          permissions: 0644
+          content: |
+            [Match]
+            Name=en*
+            [Network]
+            DHCP=yes
+            [Link]
+            MTUBytes=9000
 
   boot:
     - name: "Format /dev/nvme0n1 if unformatted and Kairos is installed to /dev/sdX"
