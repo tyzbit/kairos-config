@@ -5,4 +5,4 @@
 # repository: kairos-io/kairos
 # state_dir: /storage
 # container_image: ghcr.io/tyzbit/kairos-distros:debian-v3.2.0-k3sv1.30.5-k3s1-130 # last working custom
-container_image: ghcr.io/tyzbit/kairos-distros:debian-v3.2.1-k3sv1.31.1-k3s1-208
+container_image: ghcr.io/tyzbit/kairos-distros:debian-v3.2.3-k3sv1.31.2-k3s1-210
