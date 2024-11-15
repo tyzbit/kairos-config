@@ -208,25 +208,25 @@ stages:
       if: lspci | grep Ethernet | grep -qv Aquantia
       commands:
         - modprobe -r e1000e
-    #   files:
-    #     - path: /etc/modprobe.d/e1000e.conf
-    #       permissions: 0644
-    #       content: |
-    #         # Don't load module for onboard Ethernet to ensure k3s only uses one interface
-    #         blacklist e1000e
-    #         install e1000e /bin/false
+      files:
+        - path: /etc/modprobe.d/e1000e.conf
+          permissions: 0644
+          content: |
+            # Don't load module for onboard Ethernet to ensure k3s only uses one interface
+            blacklist e1000e
+            install e1000e /bin/false
 
-    # - name: "Conigure network interfaces"
-    #   files:
-    #     - path: /etc/systemd/network/20-dhcp.network
-    #       permissions: 0644
-    #       content: |
-    #         [Match]
-    #         Name=en*
-    #         [Network]
-    #         DHCP=yes
-    #         [Link]
-    #         MTUBytes=9000
+    - name: "Conigure network interfaces"
+      files:
+        - path: /etc/systemd/network/20-dhcp.network
+          permissions: 0644
+          content: |
+            [Match]
+            Name=en*
+            [Network]
+            DHCP=yes
+            [Link]
+            MTUBytes=9000
 
   boot:
     - name: "Format /dev/nvme0n1 if unformatted and Kairos is installed to /dev/sdX"
