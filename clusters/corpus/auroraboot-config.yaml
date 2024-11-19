@@ -1,2 +1,2 @@
-# container_image: ghcr.io/tyzbit/kairos-distros:debian-v3.2.1-k3sv1.31.1-k3s1-208
-container_image: ghcr.io/tyzbit/kairos-distros:debian-v3.2.3-k3sv1.31.2-k3s1-213
+container_image: ghcr.io/tyzbit/kairos-distros:debian-v3.2.1-k3sv1.31.1-k3s1-208
+# container_image: ghcr.io/tyzbit/kairos-distros:debian-v3.2.3-k3sv1.31.2-k3s1-213
