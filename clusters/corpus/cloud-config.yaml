@@ -204,30 +204,6 @@ stages:
         fs.inotify.max_user_instances: "8192"
         fs.inotify.max_user_watches: "524288"
 
-    - name: "Disable onboard network if an add-on card is present"
-      if: lspci | grep Ethernet | grep -qv Aquantia
-      commands:
-        - modprobe -r e1000e
-      files:
-        - path: /etc/modprobe.d/e1000e.conf
-          permissions: 0644
-          content: |
-            # Don't load module for onboard Ethernet to ensure k3s only uses one interface
-            blacklist e1000e
-            install e1000e /bin/false
-
-    - name: "Conigure network interfaces"
-      files:
-        - path: /etc/systemd/network/20-dhcp.network
-          permissions: 0644
-          content: |
-            [Match]
-            Name=en*
-            [Network]
-            DHCP=yes
-            [Link]
-            MTUBytes=9000
-
   boot:
     - name: "Format /dev/nvme0n1 if unformatted and Kairos is installed to /dev/sdX"
       # -- Double brackets needed for regex compare
@@ -265,3 +241,28 @@ stages:
         KUBECONFIG: /etc/rancher/k3s/k3s.yaml
         CONTAINERD_ADDRESS: /run/k3s/containerd/containerd.sock
         CONTAINERD_NAMESPACE: k8s.io
+
+
+    - name: "Disable onboard network if an add-on card is present"
+      if: lspci | grep Ethernet | grep -qv Aquantia
+      commands:
+        - modprobe -r e1000e
+      files:
+        - path: /etc/modprobe.d/e1000e.conf
+          permissions: 0644
+          content: |
+            # Don't load module for onboard Ethernet to ensure k3s only uses one interface
+            blacklist e1000e
+            install e1000e /bin/false
+
+    - name: "Configure network interfaces"
+      files:
+        - path: /etc/systemd/network/20-dhcp.network
+          permissions: 0644
+          content: |
+            [Match]
+            Name=en*
+            [Network]
+            DHCP=yes
+            [Link]
+            MTUBytes=9000
