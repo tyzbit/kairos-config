@@ -17,7 +17,7 @@ install:
   reboot: true
   grub_options:
     extra_cmdline: >-
-      ip=enp3s0:dhcp
+      ip=eth0:dhcp
       pcie_aspm=off
       nvme_core.default_ps_max_latency_us=0
       gfxpayload=1024x768
