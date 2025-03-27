@@ -9,6 +9,11 @@ users:
 
 strict: true
 
+install:
+  device: "/dev/sda"
+  reboot: true
+  auto: true
+
 kubevip: { enabled: false }
 growpart: { devices: ["/"] }
 
