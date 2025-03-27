@@ -27,7 +27,7 @@ flux:
   github:
     owner: tyzbit
     repository: fleet-infra
-    path: clusters/dragon/flux
+    path: clusters/dragon
     components-extra: image-reflector-controller,image-automation-controller
     network-policy: "false"
 
