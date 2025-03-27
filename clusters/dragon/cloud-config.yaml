@@ -12,7 +12,7 @@ strict: true
 install:
   auto: true
   reboot: true
-  device: /dev/nvme0n1
+  device: /dev/sda
   partitions:
     oem:
       size: 1000
