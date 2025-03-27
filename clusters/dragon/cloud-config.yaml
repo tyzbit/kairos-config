@@ -87,19 +87,6 @@ stages:
         fs.inotify.max_user_instances: "8192"
         fs.inotify.max_user_watches: "524288"
 
-    - name: "Set static IP to ensure no dependency on router"
-      files:
-        - path: /etc/systemd/network/20-dhcp.network
-          permissions: 0644
-          content: |
-            [Match]
-            Name=en*
-
-            [Network]
-            Address=192.168.1.16/24
-            Gateway=192.168.1.1
-            DNS=192.168.1.1
-
   boot:
     - name: "Set up various kube environment variables"
       environment:
