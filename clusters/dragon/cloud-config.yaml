@@ -1,0 +1,136 @@
+#cloud-config
+
+# yaml-language-server: $schema=../../schema.json
+users:
+  - name: tyzbit
+    shell: /bin/bash
+    groups: [admin]
+    ssh_authorized_keys: [github:tyzbit]
+
+strict: true
+
+install:
+  auto: true
+  reboot: true
+  device: /dev/nvme0n1
+  partitions:
+    oem:
+      size: 1000
+      fs: ext4
+    recovery:
+      size: &tenthousand 10000
+      fs: ext4
+  system:
+    size: *tenthousand
+  passive:
+    size: *tenthousand
+  recovery-system:
+    size: 25000
+
+kubevip: { enabled: false }
+growpart: { devices: ["/"] }
+
+bundles:
+  - targets: [run://quay.io/kairos/community-bundles:flux_latest]
+
+flux:
+  # -- The actual value is in http://nas.home.arpa/dragon_sensitive_configs.yaml
+  # env:
+  #   GITHUB_TOKEN: secretstuff
+  github:
+    owner: tyzbit
+    repository: fleet-infra
+    path: clusters/dragon/flux
+    components-extra: image-reflector-controller,image-automation-controller
+    network-policy: "false"
+
+stages:
+  after-install-chroot:
+    - name: "Add sensitive config values"
+      downloads:
+        - url: http://nas.home.arpa/dragon_sensitive_configs.yaml
+          path: /oem/50_sensitive_configs.yaml
+    - name: "Add SOPS secret"
+      downloads:
+        - url: http://nas.home.arpa/dragon_sops_secret.yaml
+          path: /var/lib/rancher/k3s/server/manifests/sops-secret.yaml
+
+    # -- These are in this repo
+    - name: "Add cluster-specific manifests from GitHub"
+      downloads:
+        - url: https://raw.githubusercontent.com/tyzbit/kairos-config/main/clusters/dragon/manifests/tigera-operator.yaml
+          path: /var/lib/rancher/k3s/server/manifests/tigera-operator.yaml
+        - url: https://raw.githubusercontent.com/tyzbit/kairos-config/main/clusters/dragon/manifests/calico-crds.yaml
+          path: /var/lib/rancher/k3s/server/manifests/calico-crds.yaml
+        - url: https://raw.githubusercontent.com/tyzbit/kairos-config/main/clusters/dragon/manifests/flux-system-namespace.yaml
+          path: /var/lib/rancher/k3s/server/manifests/flux-system-namespace.yaml
+        - url: https://raw.githubusercontent.com/tyzbit/kairos-config/main/clusters/dragon/manifests/kubelet-config.yaml
+          path: /etc/rancher/k3s/kubelet-config.yaml
+
+    # -- (only `commands`,`entities` and `files` may have templating)
+    - name: "Add control plane or worker config determined by MAC address"
+      files:
+        - path: /oem/60_k3s_config.yaml
+          content: |
+            #cloud-config{{"\n"}}
+
+            {{- $control_label := "dragon" -}}
+            {{- $controllers := list "0E:C2:71:D4:56:59" -}}
+            {{- $hostname := "unknown" -}}
+            {{- $count := 1 -}}
+            {{- range $net := .Values.network -}}
+              {{- if has $net.macaddress $controllers -}}
+                {{- range $mac := $controllers -}}
+                  {{- if eq $net.macaddress $mac -}}
+                    {{- $hostname = cat $control_label $count | nospace -}}
+                  {{- end -}}
+                  {{- $count = add $count 1 -}}
+                {{- end -}}
+              {{- end -}}
+            {{- end -}}
+
+            {{/* https://en.bitcoin.it/wiki/Bech32 */}}
+            {{- $random_suffix := regexReplaceAll "[^qpzry9x8gf2tvdw0s3jn54khce6mua7l]" (randAlpha 32 | lower) "" | trunc 5 -}}
+
+            hostname: {{ $hostname }}-{{ $random_suffix }}
+            k3s:
+              enabled: true
+              args:
+                - --disable traefik,servicelb
+                - --flannel-backend none
+                - --disable-network-policy
+                - --cluster-cidr 172.25.0.0/18
+                - --service-cidr 172.25.64.0/18
+                - --write-kubeconfig-mode 0644
+                - --node-label "graphics=dri"
+                - --cluster-init
+              env: { K3S_URL: "" }
+
+  # -- https://github.com/derailed/k9s/issues/1399
+  initramfs:
+    - name: Increase number of open files
+      sysctl:
+        fs.inotify.max_user_instances: "8192"
+        fs.inotify.max_user_watches: "524288"
+
+    - name: "Set static IP to ensure no dependency on router"
+      files:
+        - path: /etc/systemd/network/20-dhcp.network
+          permissions: 0644
+          content: |
+            [Match]
+            Name=en*
+
+            [Network]
+            Address=192.168.1.16/24
+            Gateway=192.168.1.1
+            DNS=192.168.1.1
+            [Link]
+            MTUBytes=9000
+
+  boot:
+    - name: "Set up various kube environment variables"
+      environment:
+        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+        CONTAINERD_ADDRESS: /run/k3s/containerd/containerd.sock
+        CONTAINERD_NAMESPACE: k8s.io

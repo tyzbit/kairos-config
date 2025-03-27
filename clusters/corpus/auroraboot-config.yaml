@@ -1,3 +1,2 @@
 state_dir: /storage
-# container_image: ghcr.io/tyzbit/kairos-distros:debian-v3.2.1-k3sv1.31.1-k3s1-208
 container_image: ghcr.io/tyzbit/kairos-distros:debian-v3.3.2-v1.31.6k3s1-262
