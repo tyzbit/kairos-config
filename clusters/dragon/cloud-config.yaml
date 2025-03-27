@@ -9,10 +9,6 @@ users:
 
 strict: true
 
-install:
-  auto: true
-  reboot: true
-
 kubevip: { enabled: false }
 growpart: { devices: ["/"] }
 
