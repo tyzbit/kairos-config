@@ -12,20 +12,6 @@ strict: true
 install:
   auto: true
   reboot: true
-  device: /dev/sda
-  partitions:
-    oem:
-      size: 1000
-      fs: ext4
-    recovery:
-      size: &tenthousand 10000
-      fs: ext4
-  system:
-    size: *tenthousand
-  passive:
-    size: *tenthousand
-  recovery-system:
-    size: 25000
 
 kubevip: { enabled: false }
 growpart: { devices: ["/"] }
