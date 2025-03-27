@@ -61,20 +61,7 @@ stages:
           content: |
             #cloud-config{{"\n"}}
 
-            {{- $control_label := "dragon" -}}
-            {{- $controllers := list "0E:C2:71:D4:56:59" -}}
-            {{- $hostname := "unknown" -}}
-            {{- $count := 1 -}}
-            {{- range $net := .Values.network -}}
-              {{- if has $net.macaddress $controllers -}}
-                {{- range $mac := $controllers -}}
-                  {{- if eq $net.macaddress $mac -}}
-                    {{- $hostname = cat $control_label $count | nospace -}}
-                  {{- end -}}
-                  {{- $count = add $count 1 -}}
-                {{- end -}}
-              {{- end -}}
-            {{- end -}}
+            {{- $hostname := "dragon" -}}
 
             {{/* https://en.bitcoin.it/wiki/Bech32 */}}
             {{- $random_suffix := regexReplaceAll "[^qpzry9x8gf2tvdw0s3jn54khce6mua7l]" (randAlpha 32 | lower) "" | trunc 5 -}}
