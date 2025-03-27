@@ -55,7 +55,7 @@ stages:
           path: /etc/rancher/k3s/kubelet-config.yaml
 
     # -- (only `commands`,`entities` and `files` may have templating)
-    - name: "Add control plane or worker config determined by MAC address"
+    - name: "Add control plane config"
       files:
         - path: /oem/60_k3s_config.yaml
           content: |
@@ -99,8 +99,6 @@ stages:
             Address=192.168.1.16/24
             Gateway=192.168.1.1
             DNS=192.168.1.1
-            [Link]
-            MTUBytes=9000
 
   boot:
     - name: "Set up various kube environment variables"
