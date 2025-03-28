@@ -131,6 +131,7 @@ stages:
             hostname: {{ $hostname }}-{{ $random_suffix }}
             k3s:
               enabled: true
+              embedded_registry: true
               args:
                 - --disable traefik,servicelb
                 - --flannel-backend none
@@ -141,6 +142,11 @@ stages:
                 - --node-label "graphics=dri"
                 - --cluster-init
               env: { K3S_URL: "" }
+        - path: /etc/rancher/k3s/registries.yaml
+          permissions: 0644
+          content: |
+            mirrors:
+              "*":
 
   # -- https://github.com/derailed/k9s/issues/1399
   initramfs:

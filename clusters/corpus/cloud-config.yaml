@@ -171,6 +171,7 @@ stages:
             {{- if $control }}
             k3s:
               enabled: true
+              embedded_registry: true
               args:
                 - --disable traefik,servicelb
                 - --flannel-backend none
@@ -188,6 +189,7 @@ stages:
             {{- else }}
             k3s-agent:
               enabled: true
+              embedded_registry: true
               args:
               {{- if not $disable_longhorn }}
                 - --node-label "node.longhorn.io/create-default-disk=true"
@@ -196,6 +198,11 @@ stages:
                 - --node-label "graphics=dri"
                 - --kubelet-arg=config=/etc/rancher/k3s/kubelet-config.yaml
             {{- end }}
+        - path: /etc/rancher/k3s/registries.yaml
+          permissions: 0644
+          content: |
+            mirrors:
+              "*":
 
   # -- https://github.com/derailed/k9s/issues/1399
   initramfs:
