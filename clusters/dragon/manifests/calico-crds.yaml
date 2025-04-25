@@ -7,6 +7,7 @@ metadata:
 spec:
   calicoNetwork:
     bgp: Enabled
+    linuxDataplane: BPF
     hostPorts: Enabled
     ipPools:
       - blockSize: 23
