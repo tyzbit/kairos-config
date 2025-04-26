@@ -65,7 +65,7 @@ apiVersion: projectcalico.org/v3
 kind: FelixConfiguration
 metadata:
   annotations:
-    operator.tigera.io/bpfEnabled: "false"
+    operator.tigera.io/bpfEnabled: "true"
   name: default
 spec:
   bpfEnabled: true
