@@ -60,3 +60,19 @@ spec:
   keepOriginalNextHop: true
   maxRestartTime: 15m0s
   peerIP: 192.168.1.1
+---
+apiVersion: projectcalico.org/v3
+kind: FelixConfiguration
+metadata:
+  annotations:
+    operator.tigera.io/bpfEnabled: "false"
+  name: default
+spec:
+  bpfEnabled: true
+  bpfExternalServiceMode: DSR
+  bpfLogLevel: ""
+  floatingIPs: Disabled
+  healthPort: 9099
+  logSeverityScreen: Info
+  reportingInterval: 0s
+  vxlanVNI: 4096
