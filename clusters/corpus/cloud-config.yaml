@@ -211,17 +211,18 @@ stages:
         fs.inotify.max_user_instances: "8192"
         fs.inotify.max_user_watches: "524288"
 
-    - name: "Disable onboard network if an add-on card is present"
-      if: lspci | grep Ethernet | grep -qv Aquantia
-      commands:
-        - modprobe -r e1000e
-      files:
-        - path: /etc/modprobe.d/e1000e.conf
-          permissions: 0644
-          content: |
-            # Don't load module for onboard Ethernet to ensure k3s only uses one interface
-            blacklist e1000e
-            install e1000e /bin/false
+    # # -- No more 2.5g cards
+    # - name: "Disable onboard network if an add-on card is present"
+    #   if: lspci | grep Ethernet | grep -qv Aquantia
+    #   commands:
+    #     - modprobe -r e1000e
+    #   files:
+    #     - path: /etc/modprobe.d/e1000e.conf
+    #       permissions: 0644
+    #       content: |
+    #         # Don't load module for onboard Ethernet to ensure k3s only uses one interface
+    #         blacklist e1000e
+    #         install e1000e /bin/false
 
     - name: "Configure network interfaces"
       files:
