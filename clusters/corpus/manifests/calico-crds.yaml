@@ -16,8 +16,6 @@ spec:
         natOutgoing: Enabled
         nodeSelector: all()
     multiInterfaceMode: None
-    nodeAddressAutodetectionV4:
-      skipInterface: enp0.*
   cni:
     ipam:
       type: Calico
