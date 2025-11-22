@@ -8,6 +8,36 @@ users:
     ssh_authorized_keys: [github:tyzbit]
 
 strict: true
+hostname: >-
+  {{- $control_label := "neuron" -}}
+  {{- $worker_label := "myocyte" -}}
+  {{- $controllers := list "48:4d:7e:e7:6a:27" "18:66:da:0b:93:be" "48:4d:7e:dd:21:6e" "00:01:2e:aa:bb:be" -}}
+  {{- $workers := list "6c:3c:8c:4f:6e:ff" "6c:3c:8c:54:fa:43" "this space left intentionally blank" "6c:3c:8c:54:fe:37" -}}
+  {{- $hostname := "unknown" -}}
+  {{- $count := 1 -}}
+  {{- range $net := .Values.network -}}
+    {{- if has $net.macaddress $controllers -}}
+      {{- range $mac := $controllers -}}
+        {{- if eq $net.macaddress $mac -}}
+          {{- $hostname = cat $control_label $count | nospace -}}
+        {{- end -}}
+        {{- $count = add $count 1 -}}
+      {{- end -}}
+    {{- end -}}
+
+    {{- if has $net.macaddress $workers -}}
+      {{- range $mac := $workers -}}
+        {{- if eq $net.macaddress $mac -}}
+          {{- $hostname = cat $worker_label $count | nospace -}}
+        {{- end -}}
+        {{- $count = add $count 1 -}}
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
+
+  {{/* https://en.bitcoin.it/wiki/Bech32 */}}
+  {{- $random_suffix := regexReplaceAll "[^qpzry9x8gf2tvdw0s3jn54khce6mua7l]" (randAlpha 32 | lower) "" | trunc 5 -}}
+  {{ $hostname }}-{{ $random_suffix }}
 
 install:
   auto: true
@@ -237,37 +267,6 @@ stages:
             MTUBytes=9000
 
   boot:
-    - name: Set Hostname
-      hostname: >-
-        {{- $control_label := "neuron" -}}
-        {{- $worker_label := "myocyte" -}}
-        {{- $controllers := list "48:4d:7e:e7:6a:27" "18:66:da:0b:93:be" "48:4d:7e:dd:21:6e" "00:01:2e:aa:bb:be" -}}
-        {{- $workers := list "6c:3c:8c:4f:6e:ff" "6c:3c:8c:54:fa:43" "this space left intentionally blank" "6c:3c:8c:54:fe:37" -}}
-        {{- $hostname := "unknown" -}}
-        {{- $count := 1 -}}
-        {{- range $net := .Values.network -}}
-          {{- if has $net.macaddress $controllers -}}
-            {{- range $mac := $controllers -}}
-              {{- if eq $net.macaddress $mac -}}
-                {{- $hostname = cat $control_label $count | nospace -}}
-              {{- end -}}
-              {{- $count = add $count 1 -}}
-            {{- end -}}
-          {{- end -}}
-
-          {{- if has $net.macaddress $workers -}}
-            {{- range $mac := $workers -}}
-              {{- if eq $net.macaddress $mac -}}
-                {{- $hostname = cat $worker_label $count | nospace -}}
-              {{- end -}}
-              {{- $count = add $count 1 -}}
-            {{- end -}}
-          {{- end -}}
-        {{- end -}}
-
-        {{/* https://en.bitcoin.it/wiki/Bech32 */}}
-        {{- $random_suffix := regexReplaceAll "[^qpzry9x8gf2tvdw0s3jn54khce6mua7l]" (randAlpha 32 | lower) "" | trunc 5 -}}
-        {{ $hostname }}-{{ $random_suffix }}
     - name: "Format /dev/nvme0n1 if unformatted and Kairos is installed to /dev/sdX"
       # -- Double brackets needed for regex compare
       if: >-
