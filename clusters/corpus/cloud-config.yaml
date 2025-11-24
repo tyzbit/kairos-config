@@ -24,7 +24,6 @@ hostname: >-
         {{- $count = add $count 1 -}}
       {{- end -}}
     {{- end -}}
-
     {{- if has $net.macaddress $workers -}}
       {{- range $mac := $workers -}}
         {{- if eq $net.macaddress $mac -}}
@@ -34,7 +33,6 @@ hostname: >-
       {{- end -}}
     {{- end -}}
   {{- end -}}
-
   {{/* https://en.bitcoin.it/wiki/Bech32 */}}
   {{- $random_suffix := regexReplaceAll "[^qpzry9x8gf2tvdw0s3jn54khce6mua7l]" (randAlpha 32 | lower) "" | trunc 5 -}}
   {{ $hostname }}-{{ $random_suffix }}
