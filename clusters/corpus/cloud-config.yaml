@@ -163,14 +163,12 @@ stages:
             {{- $bootstrap_node := eq $hostname (cat $control_label "1" | nospace) -}}
             {{- $control := hasPrefix $control_label $hostname -}}
 
+            #
             # Control: {{ $control }}
             # Bootstrap node: {{ $bootstrap_node }}
             # Disable Longhorn: {{ $disable_longhorn }}
+            #
 
-            stages:
-              initramfs:
-                - name: "Setup neuron hostnames"
-                  hostname: {{ $hostname }}-{{ $random_suffix }}
             {{- if $control }}
             k3s:
               enabled: true
@@ -201,6 +199,7 @@ stages:
                 - --node-label "graphics=dri"
                 - --kubelet-arg=config=/etc/rancher/k3s/kubelet-config.yaml
             {{- end }}
+                - --node-name "{{ $hostname }}-{{ $random_suffix }}"
         - path: /etc/rancher/k3s/registries.yaml
           permissions: 0644
           content: |
