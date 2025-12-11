@@ -169,7 +169,9 @@ stages:
             # Disable Longhorn: {{ $disable_longhorn }}
             #
 
-            hostname: {{ $hostname }}-{{ $random_suffix }}
+            stages:
+              boot:
+                - hostname: {{ $hostname }}-{{ $random_suffix }}
             {{- if $control }}
             k3s:
               enabled: true
@@ -200,7 +202,6 @@ stages:
                 - --node-label "graphics=dri"
                 - --kubelet-arg=config=/etc/rancher/k3s/kubelet-config.yaml
             {{- end }}
-                - --node-name "{{ $hostname }}-{{ $random_suffix }}"
         - path: /etc/rancher/k3s/registries.yaml
           permissions: 0644
           content: |
