@@ -115,7 +115,6 @@ stages:
         - url: https://raw.githubusercontent.com/tyzbit/kairos-config/main/clusters/corpus/manifests/kubelet-config.yaml
           path: /etc/rancher/k3s/kubelet-config.yaml
 
-  # -- https://github.com/derailed/k9s/issues/1399
   initramfs:
     # -- (only `commands`,`entities` and `files` may have templating)
     - name: "Add control plane or worker config determined by MAC address"
@@ -211,7 +210,8 @@ stages:
           content: |
             mirrors:
               "*":
-              
+
+    # -- https://github.com/derailed/k9s/issues/1399
     - name: Increase number of open files
       sysctl:
         fs.inotify.max_user_instances: "8192"
