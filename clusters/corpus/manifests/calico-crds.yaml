@@ -7,13 +7,12 @@ metadata:
 spec:
   # Configures Calico networking.
   calicoNetwork:
-    linuxDataplane: BPF
     bgp: Enabled
     hostPorts: Enabled
     ipPools:
       - blockSize: 23
         cidr: 172.23.0.0/18
-        encapsulation: IPIP
+        encapsulation: VXLANCrossSubnet
         natOutgoing: Enabled
         nodeSelector: all()
     multiInterfaceMode: None
