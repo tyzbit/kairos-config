@@ -114,44 +114,47 @@ stages:
           path: /var/lib/rancher/k3s/server/manifests/flux-system-namespace.yaml
         - url: https://raw.githubusercontent.com/tyzbit/kairos-config/main/clusters/corpus/manifests/kubelet-config.yaml
           path: /etc/rancher/k3s/kubelet-config.yaml
-    # -- (only `commands`,`entities` and `files` may have templating)
-    - name: "Set hostname"
-      hostname: |
-        {{- $control_label := "neuron" -}}
-        {{- $worker_label := "myocyte" -}}
-        {{- $controllers := list "48:4d:7e:e7:6a:27" "18:66:da:0b:93:be" "48:4d:7e:dd:21:6e" "00:01:2e:aa:bb:be" -}}
-        {{- $workers := list "6c:3c:8c:4f:6e:ff" "6c:3c:8c:54:fa:43" "this space left intentionally blank" "6c:3c:8c:54:fe:37" -}}
-        {{- $hostname := "unknown" -}}
-        {{- $count := 1 -}}
-        {{- range $net := .Values.network -}}
-          {{- if has $net.macaddress $controllers -}}
-            {{- range $mac := $controllers -}}
-              {{- if eq $net.macaddress $mac -}}
-                {{- $hostname = cat $control_label $count | nospace -}}
-              {{- end -}}
-              {{- $count = add $count 1 -}}
-            {{- end -}}
-          {{- end -}}
-          {{- if has $net.macaddress $workers -}}
-            {{- range $mac := $workers -}}
-              {{- if eq $net.macaddress $mac -}}
-                {{- $hostname = cat $worker_label $count | nospace -}}
-              {{- end -}}
-              {{- $count = add $count 1 -}}
-            {{- end -}}
-          {{- end -}}
-        {{- end -}}
-        {{/* https://en.bitcoin.it/wiki/Bech32 */}}
-        {{- $random_suffix := regexReplaceAll "[^qpzry9x8gf2tvdw0s3jn54khce6mua7l]" (randAlpha 32 | lower) "" | trunc 5 -}}
-        {{- $bootstrap_node := eq $hostname (cat $control_label "1" | nospace) -}}
-        {{- $control := hasPrefix $control_label $hostname -}}
-        {{ $hostname }}-{{ $random_suffix }}
 
-  initramfs:
-    # -- (only `commands`,`entities` and `files` may have templating)
-    - name: "Add control plane or worker config determined by MAC address"
+    - name: "Set up hostname"
       files:
-        - path: /oem/60_k3s_config.yaml
+        - path: /oem/60_hostname.yaml
+          content: |
+            #cloud-config{{"\n"}}
+            {{- $control_label := "neuron" -}}
+            {{- $worker_label := "myocyte" -}}
+            {{- $controllers := list "48:4d:7e:e7:6a:27" "18:66:da:0b:93:be" "48:4d:7e:dd:21:6e" "00:01:2e:aa:bb:be" -}}
+            {{- $workers := list "6c:3c:8c:4f:6e:ff" "6c:3c:8c:54:fa:43" "this space left intentionally blank" "6c:3c:8c:54:fe:37" -}}
+            {{- $hostname := "unknown" -}}
+            {{- $count := 1 -}}
+            {{- range $net := .Values.network -}}
+              {{- if has $net.macaddress $controllers -}}
+                {{- range $mac := $controllers -}}
+                  {{- if eq $net.macaddress $mac -}}
+                    {{- $hostname = cat $control_label $count | nospace -}}
+                  {{- end -}}
+                  {{- $count = add $count 1 -}}
+                {{- end -}}
+              {{- end -}}
+              {{- if has $net.macaddress $workers -}}
+                {{- range $mac := $workers -}}
+                  {{- if eq $net.macaddress $mac -}}
+                    {{- $hostname = cat $worker_label $count | nospace -}}
+                  {{- end -}}
+                  {{- $count = add $count 1 -}}
+                {{- end -}}
+              {{- end -}}
+            {{- end -}}
+            {{/* https://en.bitcoin.it/wiki/Bech32 */}}
+            {{- $random_suffix := regexReplaceAll "[^qpzry9x8gf2tvdw0s3jn54khce6mua7l]" (randAlpha 32 | lower) "" | trunc 5 -}}
+            stages:
+              boot:
+                - name: "Set hostname"
+                  hostname: "{{ $hostname }}-{{ $random_suffix }}"
+
+    # -- (only `commands`,`entities` and `files` may have templating)
+    - name: "Add k3s config generated for node role"
+      files:
+        - path: /oem/70_k3s_config.yaml
           content: |
             #cloud-config{{"\n"}}
             {{- $control_label := "neuron" -}}
@@ -203,12 +206,16 @@ stages:
                 - --kubelet-arg=config=/etc/rancher/k3s/kubelet-config.yaml
             {{- end }}
                 - --node-name "{{ $hostname }}"
+
+    - name: "Enable container image mirroring"
+      files:
         - path: /etc/rancher/k3s/registries.yaml
           permissions: 0644
           content: |
             mirrors:
               "*":
 
+  initramfs:
     # -- https://github.com/derailed/k9s/issues/1399
     - name: Increase number of open files
       sysctl:
