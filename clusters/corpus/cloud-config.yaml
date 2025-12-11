@@ -167,8 +167,9 @@ stages:
             # Disable Longhorn: {{ $disable_longhorn }}
             #
 
+            hostname: {{ $hostname }}-{{ $random_suffix }}
             stages:
-              boot:
+              initramfs:
                 - hostname: {{ $hostname }}-{{ $random_suffix }}
             {{- if $control }}
             k3s:
