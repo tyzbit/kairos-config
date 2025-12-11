@@ -178,7 +178,9 @@ stages:
             hostname: {{ $hostname }}-{{ $random_suffix }}
             stages:
               initramfs:
-                - hostname: {{ $hostname }}-{{ $random_suffix }}
+                - hostname: "{{ $hostname }}-{{ $random_suffix }}"
+              boot:
+                - hostname: "{{ $hostname }}-{{ $random_suffix }}"
             {{- if $control }}
             k3s:
               enabled: true
