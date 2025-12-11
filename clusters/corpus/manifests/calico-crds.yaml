@@ -1,10 +1,11 @@
 # This section includes base Calico installation configuration.
-# For more information, see: https://projectcalico.docs.tigera.io/master/reference/installation/api#operator.tigera.io/v1.Installation
+# For more information, see: https://docs.tigera.io/calico/latest/reference/installation/api#operator.tigera.io/v1.Installation
 apiVersion: operator.tigera.io/v1
 kind: Installation
 metadata:
   name: default
 spec:
+  # Configures Calico networking.
   calicoNetwork:
     linuxDataplane: BPF
     bgp: Enabled
@@ -16,19 +17,10 @@ spec:
         natOutgoing: Enabled
         nodeSelector: all()
     multiInterfaceMode: None
-  cni:
-    ipam:
-      type: Calico
-    type: Calico
-  flexVolumePath: /usr/libexec/kubernetes/kubelet-plugins/volume/exec/
-  nodeUpdateStrategy:
-    rollingUpdate:
-      maxUnavailable: 1
-    type: RollingUpdate
-  variant: Calico
+
 ---
 # This section configures the Calico API server.
-# For more information, see: https://projectcalico.docs.tigera.io/master/reference/installation/api#operator.tigera.io/v1.APIServer
+# For more information, see: https://docs.tigera.io/calico/latest/reference/installation/api#operator.tigera.io/v1.APIServer
 apiVersion: operator.tigera.io/v1
 kind: APIServer
 metadata:
@@ -59,19 +51,3 @@ spec:
   keepOriginalNextHop: true
   maxRestartTime: 15m0s
   peerIP: 192.168.1.1
----
-apiVersion: projectcalico.org/v3
-kind: FelixConfiguration
-metadata:
-  annotations:
-    operator.tigera.io/bpfEnabled: "true"
-  name: default
-spec:
-  bpfEnabled: true
-  bpfExternalServiceMode: DSR
-  bpfLogLevel: ""
-  floatingIPs: Disabled
-  healthPort: 9099
-  logSeverityScreen: Info
-  reportingInterval: 0s
-  vxlanVNI: 4096
