@@ -202,7 +202,6 @@ stages:
                 - --node-label "graphics=dri"
                 - --kubelet-arg=config=/etc/rancher/k3s/kubelet-config.yaml
             {{- end }}
-                - --node-name "{{ $hostname }}"
 
     - name: "Enable container image mirroring"
       files:
