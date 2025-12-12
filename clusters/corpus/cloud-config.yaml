@@ -240,6 +240,15 @@ stages:
             [Link]
             MTUBytes=9000
 
+    # https://longhorn.io/kb/troubleshooting-volume-with-multipath/
+    - name: "Disable multipath"
+      files:
+        - path: /etc/multipath.conf
+          permissions: 0644
+          content: |
+            blacklist {
+                devnode "^sd[a-z0-9]+"
+            }
   boot:
     - name:
         "Format /dev/nvme0n1 if unformatted and Kairos is installed to /dev/sdX"
@@ -277,3 +286,6 @@ stages:
         KUBECONFIG: /etc/rancher/k3s/k3s.yaml
         CONTAINERD_ADDRESS: /run/k3s/containerd/containerd.sock
         CONTAINERD_NAMESPACE: k8s.io
+
+    - name: "Load dm_crypt module"
+      modules: [dm_crypt]
