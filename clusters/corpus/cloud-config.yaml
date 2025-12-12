@@ -149,7 +149,7 @@ stages:
             {{- end -}}
             {{/* https://en.bitcoin.it/wiki/Bech32 */}}
             {{- $random_suffix := regexReplaceAll "[^qpzry9x8gf2tvdw0s3jn54khce6mua7l]" (randAlpha 32 | lower) "" | trunc 5 -}}
-            {{- $hostname := cat $hostname $random_suffix }}
+            {{- $hostname := cat ($hostname "-" $random_suffix) | nospace }}
             hostname: "{{ $hostname }}"
 
             {{- $no_longhorn := list "00:01:2e:aa:bb:be" -}}
