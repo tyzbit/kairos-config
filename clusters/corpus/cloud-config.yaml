@@ -217,7 +217,7 @@ stages:
         fs.inotify.max_user_watches: "524288"
 
     - name: "Disable onboard network if an add-on card is present"
-      if: lspci | grep Ethernet | grep -qv Aquantia
+      if: lspci | grep Ethernet | grep -q Aquantia
       commands:
         - modprobe -r e1000e
       files:
