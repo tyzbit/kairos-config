@@ -150,7 +150,6 @@ stages:
             {{/* https://en.bitcoin.it/wiki/Bech32 */}}
             {{- $random_suffix := regexReplaceAll "[^qpzry9x8gf2tvdw0s3jn54khce6mua7l]" (randAlpha 32 | lower) "" | trunc 5 -}}
             {{- $hostname := cat $hostname "-" $random_suffix | nospace -}}
-            hostname: "{{ $hostname }}"
 
             {{- $no_longhorn := list "00:01:2e:aa:bb:be" -}}
             {{- $disable_longhorn := false -}}
@@ -169,6 +168,7 @@ stages:
             # Disable Longhorn: {{ $disable_longhorn }}
             #
 
+            hostname: "{{ $hostname }}"
             {{- if $control }}
             k3s:
               enabled: true
@@ -216,18 +216,17 @@ stages:
         fs.inotify.max_user_instances: "8192"
         fs.inotify.max_user_watches: "524288"
 
-    # # -- No more 2.5g cards
-    # - name: "Disable onboard network if an add-on card is present"
-    #   if: lspci | grep Ethernet | grep -qv Aquantia
-    #   commands:
-    #     - modprobe -r e1000e
-    #   files:
-    #     - path: /etc/modprobe.d/e1000e.conf
-    #       permissions: 0644
-    #       content: |
-    #         # Don't load module for onboard Ethernet to ensure k3s only uses one interface
-    #         blacklist e1000e
-    #         install e1000e /bin/false
+    - name: "Disable onboard network if an add-on card is present"
+      if: lspci | grep Ethernet | grep -qv Aquantia
+      commands:
+        - modprobe -r e1000e
+      files:
+        - path: /etc/modprobe.d/e1000e.conf
+          permissions: 0644
+          content: |
+            # Don't load module for onboard Ethernet to ensure k3s only uses one interface
+            blacklist e1000e
+            install e1000e /bin/false
 
     - name: "Configure network interfaces"
       files:
