@@ -17,7 +17,9 @@ install:
   reboot: true
   grub_options:
     extra_cmdline: >-
-      pcie_aspm=off nvme_core.default_ps_max_latency_us=0 gfxpayload=1024x768
+      pcie_aspm=off
+      nvme_core.default_ps_max_latency_us=0
+      gfxpayload=1024x768
       gfxmode=1024x768
   extra-dirs-rootfs: &longhorn [/var/lib/longhorn]
 
@@ -115,9 +117,10 @@ stages:
         - url: https://raw.githubusercontent.com/tyzbit/kairos-config/main/clusters/corpus/manifests/kubelet-config.yaml
           path: /etc/rancher/k3s/kubelet-config.yaml
 
-    - name: "Set up hostname"
+    # -- (only `commands`,`entities` and `files` may have templating)
+    - name: "Add k3s config generated for node role"
       files:
-        - path: /oem/60_hostname.yaml
+        - path: /oem/60_k3s_config.yaml
           content: |
             #cloud-config{{"\n"}}
             {{- $control_label := "neuron" -}}
@@ -146,15 +149,9 @@ stages:
             {{- end -}}
             {{/* https://en.bitcoin.it/wiki/Bech32 */}}
             {{- $random_suffix := regexReplaceAll "[^qpzry9x8gf2tvdw0s3jn54khce6mua7l]" (randAlpha 32 | lower) "" | trunc 5 -}}
-            hostname: "{{ $hostname }}-{{ $random_suffix }}"
+            {{- $hostname := cat $hostname $random_suffix }}
+            hostname: "{{ $hostname }}"
 
-    # -- (only `commands`,`entities` and `files` may have templating)
-    - name: "Add k3s config generated for node role"
-      files:
-        - path: /oem/70_k3s_config.yaml
-          content: |
-            #cloud-config{{"\n"}}
-            {{- $control_label := "neuron" -}}
             {{- $no_longhorn := list "00:01:2e:aa:bb:be" -}}
             {{- $disable_longhorn := false -}}
             {{- range $net := .Values.network -}}
@@ -162,9 +159,9 @@ stages:
                 {{- $disable_longhorn = true -}}
               {{- end -}}
             {{- end -}}
-            {{- $hostname := .Values.node.hostname }}
-            {{- $bootstrap_node := hasPrefix (cat $control_label "1" | nospace) $hostname -}}
+
             {{- $control := hasPrefix $control_label $hostname -}}
+            {{- $bootstrap_node := hasPrefix (cat $control_label "1" | nospace) $hostname -}}
 
             #
             # Control: {{ $control }}
@@ -202,6 +199,7 @@ stages:
                 - --node-label "graphics=dri"
                 - --kubelet-arg=config=/etc/rancher/k3s/kubelet-config.yaml
             {{- end }}
+                - --node-name "{{ $hostname }}"
 
     - name: "Enable container image mirroring"
       files:
