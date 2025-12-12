@@ -242,13 +242,10 @@ stages:
 
     # https://longhorn.io/kb/troubleshooting-volume-with-multipath/
     - name: "Disable multipath"
-      files:
-        - path: /etc/multipath.conf
-          permissions: 0644
-          content: |
-            blacklist {
-                devnode "^sd[a-z0-9]+"
-            }
+      commands:
+        - systemctl stop multipathd
+        - systemctl disable multipathd
+        - systemctl mask multipathd
   boot:
     - name:
         "Format /dev/nvme0n1 if unformatted and Kairos is installed to /dev/sdX"
