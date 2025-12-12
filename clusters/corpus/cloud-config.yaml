@@ -146,10 +146,7 @@ stages:
             {{- end -}}
             {{/* https://en.bitcoin.it/wiki/Bech32 */}}
             {{- $random_suffix := regexReplaceAll "[^qpzry9x8gf2tvdw0s3jn54khce6mua7l]" (randAlpha 32 | lower) "" | trunc 5 -}}
-            stages:
-              boot:
-                - name: "Set hostname"
-                  hostname: "{{ $hostname }}-{{ $random_suffix }}"
+            hostname: "{{ $hostname }}-{{ $random_suffix }}"
 
     # -- (only `commands`,`entities` and `files` may have templating)
     - name: "Add k3s config generated for node role"
