@@ -172,7 +172,7 @@ stages:
             {{- if $control }}
             k3s:
               enabled: true
-              embedded_registry: true
+              # embedded_registry: true
               args:
                 - --disable traefik,servicelb
                 - --flannel-backend none
@@ -201,13 +201,14 @@ stages:
             {{- end }}
                 - --node-name "{{ $hostname }}"
 
-    - name: "Enable container image mirroring"
-      files:
-        - path: /etc/rancher/k3s/registries.yaml
-          permissions: 0644
-          content: |
-            mirrors:
-              "*":
+    # # Causes pull issues
+    # - name: "Enable container image mirroring"
+    #   files:
+    #     - path: /etc/rancher/k3s/registries.yaml
+    #       permissions: 0644
+    #       content: |
+    #         mirrors:
+    #           "*":
 
   initramfs:
     # -- https://github.com/derailed/k9s/issues/1399
