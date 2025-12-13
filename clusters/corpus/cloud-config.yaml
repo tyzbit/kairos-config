@@ -149,7 +149,6 @@ stages:
             {{- end -}}
             {{/* https://en.bitcoin.it/wiki/Bech32 */}}
             {{- $random_suffix := regexReplaceAll "[^qpzry9x8gf2tvdw0s3jn54khce6mua7l]" (randAlpha 32 | lower) "" | trunc 5 -}}
-            {{- $hostname := cat $hostname "-" $random_suffix | nospace -}}
 
             {{- $no_longhorn := list "00:01:2e:aa:bb:be" -}}
             {{- $disable_longhorn := false -}}
@@ -161,6 +160,7 @@ stages:
 
             {{- $control := hasPrefix $control_label $hostname -}}
             {{- $bootstrap_node := hasPrefix (cat $control_label "1" | nospace) $hostname -}}
+            {{- $nodename := cat $hostname "-" $random_suffix | nospace -}}
 
             #
             # Control: {{ $control }}
@@ -199,7 +199,7 @@ stages:
                 - --node-label "graphics=dri"
                 - --kubelet-arg=config=/etc/rancher/k3s/kubelet-config.yaml
             {{- end }}
-                - --node-name "{{ $hostname }}"
+                - --node-name "{{ $nodename }}"
 
     # # Causes pull issues
     # - name: "Enable container image mirroring"
