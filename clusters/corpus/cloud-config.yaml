@@ -230,11 +230,11 @@ stages:
             install e1000e /bin/false
 
     - name: "Disable add-on card if it's r8169"
-      if: lspci | grep Ethernet | grep -q Aquantia
+      if: lspci | grep Ethernet | grep -q RTL8125
       commands:
         - modprobe -r r8169
       files:
-        - path: /etc/modprobe.d/e1000e.conf
+        - path: /etc/modprobe.d/r8169.conf
           permissions: 0644
           content: |
             # Don't load module for add-on Ethernet to ensure k3s only uses one interface
