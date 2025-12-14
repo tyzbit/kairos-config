@@ -190,7 +190,7 @@ stages:
             {{- else }}
             k3s-agent:
               enabled: true
-              embedded_registry: true
+              # embedded_registry: true
               args:
               {{- if not $disable_longhorn }}
                 - --node-label "node.longhorn.io/create-default-disk=true"
@@ -202,7 +202,7 @@ stages:
                 - --node-name "{{ $nodename }}"
 
     # # Causes pull issues
-    # - name: "Enable container image mirroring"
+    # - name: "Enable embedded registry"
     #   files:
     #     - path: /etc/rancher/k3s/registries.yaml
     #       permissions: 0644
@@ -217,37 +217,51 @@ stages:
         fs.inotify.max_user_instances: "8192"
         fs.inotify.max_user_watches: "524288"
 
-    - name: "Disable onboard network if an add-on card is present"
-      if: lspci | grep Ethernet | grep -q Aquantia
-      commands:
-        - modprobe -r e1000e
-      files:
-        - path: /etc/modprobe.d/e1000e.conf
-          permissions: 0644
-          content: |
-            # Don't load module for onboard Ethernet to ensure k3s only uses one interface
-            blacklist e1000e
-            install e1000e /bin/false
+    # - name: "Disable onboard network if an add-on card is present"
+    #   if: lspci | grep Ethernet | grep -q Aquantia
+    #   commands:
+    #     - modprobe -r e1000e
+    #   files:
+    #     - path: /etc/modprobe.d/e1000e.conf
+    #       permissions: 0644
+    #       content: |
+    #         # Don't load module for onboard Ethernet to ensure k3s only uses one interface
+    #         blacklist e1000e
+    #         install e1000e /bin/false
 
-    - name: "Disable add-on card if it's r8169"
+    # - name: "Disable add-on card if it's r8169"
+    #   if: lspci | grep Ethernet | grep -q RTL8125
+    #   commands:
+    #     - modprobe -r r8169
+    #   files:
+    #     - path: /etc/modprobe.d/r8169.conf
+    #       permissions: 0644
+    #       content: |
+    #         # Don't load module for add-on Ethernet to ensure k3s only uses one interface
+    #         blacklist r8169
+    #         install r8169 /bin/false
+
+    - name: "Configure network interfaces for RTL8125 machines"
       if: lspci | grep Ethernet | grep -q RTL8125
-      commands:
-        - modprobe -r r8169
-      files:
-        - path: /etc/modprobe.d/r8169.conf
-          permissions: 0644
-          content: |
-            # Don't load module for add-on Ethernet to ensure k3s only uses one interface
-            blacklist r8169
-            install r8169 /bin/false
-
-    - name: "Configure network interfaces"
       files:
         - path: /etc/systemd/network/20-dhcp.network
           permissions: 0644
           content: |
             [Match]
-            Name=en*
+            Name=enp0*
+            [Network]
+            DHCP=yes
+            [Link]
+            MTUBytes=9000
+
+    - name: "Configure network interfaces for e1000e machines"
+      if: lspci | grep Ethernet | grep -q Aquantia
+      files:
+        - path: /etc/systemd/network/20-dhcp.network
+          permissions: 0644
+          content: |
+            [Match]
+            Name=enp3*
             [Network]
             DHCP=yes
             [Link]
@@ -261,6 +275,9 @@ stages:
         - systemctl mask multipathd
 
   boot:
+    - name: "Load dm_crypt module"
+      modules: [dm_crypt]
+
     - name:
         "Format /dev/nvme0n1 if unformatted and Kairos is installed to /dev/sdX"
       # -- Double brackets needed for regex compare
@@ -297,6 +314,3 @@ stages:
         KUBECONFIG: /etc/rancher/k3s/k3s.yaml
         CONTAINERD_ADDRESS: /run/k3s/containerd/containerd.sock
         CONTAINERD_NAMESPACE: k8s.io
-
-    - name: "Load dm_crypt module"
-      modules: [dm_crypt]
