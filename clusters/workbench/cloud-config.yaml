@@ -127,11 +127,11 @@ stages:
 
             {{/* https://en.bitcoin.it/wiki/Bech32 */}}
             {{- $random_suffix := regexReplaceAll "[^qpzry9x8gf2tvdw0s3jn54khce6mua7l]" (randAlpha 32 | lower) "" | trunc 5 -}}
+            {{- $nodename := cat $hostname "-" $random_suffix | nospace -}}
 
-            hostname: {{ $hostname }}-{{ $random_suffix }}
+            hostname: {{ $hostname }}
             k3s:
               enabled: true
-              embedded_registry: true
               args:
                 - --disable traefik,servicelb
                 - --flannel-backend none
@@ -141,12 +141,8 @@ stages:
                 - --write-kubeconfig-mode 0644
                 - --node-label "graphics=dri"
                 - --cluster-init
+                - --node-name "{{ $nodename }}"
               env: { K3S_URL: "" }
-        - path: /etc/rancher/k3s/registries.yaml
-          permissions: 0644
-          content: |
-            mirrors:
-              "*":
 
   # -- https://github.com/derailed/k9s/issues/1399
   initramfs:
@@ -170,7 +166,17 @@ stages:
             [Link]
             MTUBytes=9000
 
+    # https://longhorn.io/kb/troubleshooting-volume-with-multipath/
+    - name: "Disable multipath"
+      commands:
+        - systemctl stop multipathd
+        - systemctl disable multipathd
+        - systemctl mask multipathd
+
   boot:
+    - name: "Load dm_crypt module"
+      modules: [dm_crypt]
+
     - name: "Set up various kube environment variables"
       environment:
         KUBECONFIG: /etc/rancher/k3s/k3s.yaml
