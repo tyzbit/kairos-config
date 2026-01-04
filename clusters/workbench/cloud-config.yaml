@@ -5,7 +5,11 @@ users:
   - name: tyzbit
     shell: /bin/bash
     groups: [admin]
-    ssh_authorized_keys: [github:tyzbit]
+    ssh_authorized_keys:
+      - github:tyzbit
+      - >-
+        ssh-ed25519
+        AAAAC3NzaC1lZDI1NTE5AAAAIHd40FRBfhjQ9FM89scDdWz94mqKASouXETgGPyQ3esj
 
 strict: true
 
